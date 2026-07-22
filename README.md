@@ -1,3 +1,5 @@
 # garden
 
-If a note is not published, does it really exist? — Erwin Schrödinger
+"If your work isn’t online, it doesn’t exist."
+
+— Austin Kleon, *Show Your Work!*
