@@ -1,5 +1,4 @@
 # garden
 
-"If your work isn’t online, it doesn’t exist."
-
-— Austin Kleon, *Show Your Work!*
+> *"How can I know what I think till I see what I say?"*  
+> — **E.M. Forster**, *Aspects of the Novel*
