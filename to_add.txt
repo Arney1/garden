@@ -1,0 +1,7 @@
+<script>
+   if (!window.location.hash || window.location.hash === '#/' || window.location.hash === '#/page/') {
+     window.location.hash = '#/page/Arney%20Nova';
+   }
+</script>
+
+<script src="coi-serviceworker.min.js"></script>
