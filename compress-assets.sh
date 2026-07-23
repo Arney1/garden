@@ -26,50 +26,71 @@ find "$ASSETS_DIR" -type f -size +${MAX_SIZE_MB}M | while read -r file; do
 
     case "$ext_lc" in
         pdf)
-            if command -v gs &> /dev/null; then
-                tmp_out="${file}.tmp.pdf"
+            tmp_out="${file}.tmp.pdf"
+            compressed=0
 
-                # Attempt 1: /ebook (150 DPI)
-                echo "Compressing PDF (preset: /ebook)..."
-                gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/ebook \
-                   -dNOPAUSE -dQUIET -dBATCH -sOutputFile="$tmp_out" "$file" > /dev/null 2>&1
+            # Tier 1: Ghostscript aggressive downsampling (100 DPI)
+            if command -v gs &> /dev/null; then
+                echo "Attempting Tier 1 (Ghostscript aggressive downsampling)..."
+                gs -sDEVICE=pdfwrite \
+                   -dCompatibilityLevel=1.4 \
+                   -dNOPAUSE -dBATCH -dQUIET \
+                   -dDownsampleColorImages=true \
+                   -dColorImageResolution=100 \
+                   -dColorImageDownsampleType=/Bicubic \
+                   -dDownsampleGrayImages=true \
+                   -dGrayImageResolution=100 \
+                   -dDownsampleMonoImages=true \
+                   -dMonoImageResolution=100 \
+                   -sOutputFile="$tmp_out" "$file" > /dev/null 2>&1
 
                 new_size_bytes=$(stat -c%s "$tmp_out" 2>/dev/null || echo 999999999)
-
-                # Attempt 2: If /ebook inflated or is still > 24MB, try /screen (72 DPI)
-                if [ "$new_size_bytes" -ge "$orig_size_bytes" ] || [ "$new_size_bytes" -gt "$MAX_BYTES" ]; then
-                    echo "/ebook yielded $(du -h "$tmp_out" 2>/dev/null | cut -f1). Retrying with /screen..."
-                    gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/screen \
-                       -dNOPAUSE -dQUIET -dBATCH -sOutputFile="$tmp_out" "$file" > /dev/null 2>&1
-                    new_size_bytes=$(stat -c%s "$tmp_out" 2>/dev/null || echo 999999999)
-                fi
-
-                # Check if result is smaller AND fits Cloudflare's limit
-                if [ "$new_size_bytes" -lt "$orig_size_bytes" ] && [ "$new_size_bytes" -le "$MAX_BYTES" ]; then
-                    mv "$tmp_out" "$file"
-                    echo "Compressed: $file -> $(du -h "$file" | cut -f1)"
+                if [ "$new_size_bytes" -le "$MAX_BYTES" ] && [ "$new_size_bytes" -lt "$orig_size_bytes" ]; then
+                    compressed=1
                 else
-                    rm -f "$tmp_out"
-                    echo "Unable to compress $file under ${MAX_SIZE_MB}MB."
-
-                    # Exclude file from Cloudflare build to avoid upload error
-                    ignore_path="${file#public-pages/}"
-                    if ! grep -qF "$ignore_path" .cloudflareignore 2>/dev/null; then
-                        echo "$ignore_path" >> .cloudflareignore
-                        echo "Added $ignore_path to .cloudflareignore"
-                    fi
+                    echo "Tier 1 result: $(du -h "$tmp_out" 2>/dev/null | cut -f1) (exceeds ${MAX_SIZE_MB}MB)."
                 fi
+            fi
+
+            # Tier 2: pdftoppm + img2pdf fallback (120 DPI JPEG rasterization)
+            if [ "$compressed" -eq 0 ] && command -v pdftoppm &> /dev/null && command -v img2pdf &> /dev/null; then
+                echo "Attempting Tier 2 (pdftoppm + img2pdf rasterization)..."
+                tmp_dir=$(mktemp -d)
+                pdftoppm -jpeg -r 120 -jpegopt quality=75 "$file" "$tmp_dir/page" > /dev/null 2>&1
+                img2pdf "$tmp_dir"/*.jpg -o "$tmp_out" > /dev/null 2>&1
+                rm -rf "$tmp_dir"
+
+                new_size_bytes=$(stat -c%s "$tmp_out" 2>/dev/null || echo 999999999)
+                if [ "$new_size_bytes" -le "$MAX_BYTES" ] && [ "$new_size_bytes" -lt "$orig_size_bytes" ]; then
+                    compressed=1
+                else
+                    echo "Tier 2 result: $(du -h "$tmp_out" 2>/dev/null | cut -f1) (exceeds ${MAX_SIZE_MB}MB)."
+                fi
+            fi
+
+            # Apply compressed file or fallback to .cloudflareignore
+            if [ "$compressed" -eq 1 ]; then
+                mv "$tmp_out" "$file"
+                echo "Compressed: $file -> $(du -h "$file" | cut -f1)"
             else
-                echo "Error: Ghostscript ('gs') is not installed."
+                rm -f "$tmp_out"
+                echo "Unable to compress $file under ${MAX_SIZE_MB}MB."
+
+                # Exclude file from Cloudflare build as last resort
+                ignore_path="${file#public-pages/}"
+                if ! grep -qF "$ignore_path" .cloudflareignore 2>/dev/null; then
+                    echo "$ignore_path" >> .cloudflareignore
+                    echo "Added $ignore_path to .cloudflareignore"
+                fi
             fi
             ;;
 
         png|jpg|jpeg)
             if command -v magick &> /dev/null; then
-                magick "$file" -resize 80% -quality 75 "$file"
+                magick "$file" -resize 75% -quality 70 "$file"
                 echo "Compressed image: $file -> $(du -h "$file" | cut -f1)"
             elif command -v convert &> /dev/null; then
-                convert "$file" -resize 80% -quality 75 "$file"
+                convert "$file" -resize 75% -quality 70 "$file"
                 echo "Compressed image: $file -> $(du -h "$file" | cut -f1)"
             fi
             ;;
