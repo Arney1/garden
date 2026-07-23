@@ -10,6 +10,7 @@ This garden is published as a static site built primarily with:
 - JavaScript
 - HTML
 - CSS
+
 Which was automated within Logseq.
 
 ## Local usage
