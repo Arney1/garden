@@ -2,7 +2,7 @@
 
 my digital garden :P — a personal, evolving space for notes, ideas, and experiments. a place where pieces of knowledge intertwine, forming an interconnected web of information.
 
-🌱 **Live site:** https://arney1.github.io/garden/
+🌱 **Live site:** https://arney-garden.pages.dev
 
 please delete cookeis and site data and reload the page if it errs
 
