@@ -1,6 +1,6 @@
 # garden
 
-my digital garden :P — a personal, evolving space for notes, ideas, and experiments.
+my digital garden :P — a personal, evolving space for notes, ideas, and experiments. a place where pieces of knowledge intertwine, forming an interconnected web of information.
 
 🌱 **Live site:** https://arney1.github.io/garden/
 
@@ -10,10 +10,11 @@ This garden is published as a static site built primarily with:
 - JavaScript
 - HTML
 - CSS
+Which was automated within Logseq.
 
 ## Local usage
 
-This repository currently looks like a prebuilt static export. There is no required setup script in-repo, so the simplest way to view it locally is to open `/home/runner/work/garden/garden/index.html` in a browser.
+There is no required setup script in-repo, so the simplest way to view it locally is to open `index.html` in a browser.
 
 ## About this project
 
