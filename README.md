@@ -4,6 +4,8 @@ my digital garden :P — a personal, evolving space for notes, ideas, and experi
 
 🌱 **Live site:** https://arney1.github.io/garden/
 
+please delete cookeis and site data and reload the page if it errs
+
 ## Tech stack
 
 This garden is published as a static site built primarily with:
