@@ -243,7 +243,7 @@ def loading_html_and_script():
          const loadingInterval = setInterval(() => {
            const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
            if (timeDisplay) timeDisplay.innerText = `${elapsed}s`;
-           simulatedProgress += (95 - simulatedProgress) * 0.001;
+           simulatedProgress += (95 - simulatedProgress) * 0.0038;
            if (progressBar) progressBar.style.width = `${simulatedProgress}%`;
          }, 100);
 
@@ -286,7 +286,7 @@ def loading_html_and_script():
          });
 
          check();
-         setTimeout(dismissLoader, 15000);
+         setTimeout(dismissLoader, 150000);
        })();
      </script>"""
 
