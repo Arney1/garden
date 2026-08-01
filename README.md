@@ -25,3 +25,7 @@ This is a personal digital garden, so content and structure may change over time
 
 > *"How can I know what I think till I see what I say?"*  
 > — **E.M. Forster**, *Aspects of the Novel*
+
+## Writeups & CTF notes
+
+This garden also contains writeups and CTF notes (for example, descriptions of exploitation types, techniques, and walkthroughs). I don't currently maintain a separate writeup repository — these notes live here in the digital garden. Only writeups that are allowed to be publicized are included.
