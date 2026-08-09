@@ -302,7 +302,6 @@ def loading_html_and_script():
          });
 
          check();
-         setTimeout(dismissLoader, 200000);
        })();
      </script>"""
 
