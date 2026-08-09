@@ -88,39 +88,53 @@ def loading_styles():
 
      #loading {
        position: fixed;
-       inset: 0;
+       bottom: 32px;
+       left: 50%;
+       transform: translateX(-50%);
        display: flex;
-       flex-direction: column;
        align-items: center;
        justify-content: center;
        background: var(--bg-dark);
-       z-index: 99999;
+       padding: 16px 24px;
+       border: 1px solid rgba(255, 255, 255, 0.08);
+       border-radius: 16px;
+       box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+       z-index: 99;
        opacity: 1;
        visibility: visible;
-       transition: opacity 0.4s ease-out, visibility 0.4s ease-out;
-       will-change: opacity, visibility;
+       transition: opacity 0.4s ease-out, visibility 0.4s ease-out, transform 0.4s ease-out;
+       will-change: opacity, visibility, transform;
+       width: max-content;
+       max-width: 90vw;
      }
 
      #loading.fade-out {
        opacity: 0;
        visibility: hidden;
+       transform: translate(-50%, 20px);
      }
 
      .loader-content {
        display: flex;
-       flex-direction: column;
+       flex-direction: row;
        align-items: center;
        gap: 16px;
      }
 
      .loader-avatar {
-       width: 56px;
-       height: 56px;
-       border-radius: 16px;
-       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+       width: 40px;
+       height: 40px;
+       border-radius: 10px;
+       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
        animation: loader-pulse 2.2s infinite ease-in-out;
        will-change: transform, filter;
        transform: translateZ(0);
+     }
+
+     .loader-info {
+       display: flex;
+       flex-direction: column;
+       gap: 8px;
      }
 
      .loader-text-row {
@@ -141,7 +155,7 @@ def loading_styles():
      }
 
      .loader-bar {
-       width: 120px;
+       width: 140px;
        height: 3px;
        background: rgba(255, 255, 255, 0.06);
        border-radius: 3px;
@@ -218,12 +232,14 @@ def loading_html_and_script():
     return """ <div id="loading">
      <div class="loader-content">
        <img src="static/img/logo.png" alt="Avatar" class="loader-avatar" fetchpriority="high" decoding="async">
-       <div class="loader-text-row">
-         <span>entering garden...</span>
-         <span class="loader-time" id="loader-time-display">0.0s</span>
-       </div>
-       <div class="loader-bar">
-         <div class="loader-progress" id="loader-progress-bar"></div>
+       <div class="loader-info">
+         <div class="loader-text-row">
+           <span>entering garden...</span>
+           <span class="loader-time" id="loader-time-display">0.0s</span>
+         </div>
+         <div class="loader-bar">
+           <div class="loader-progress" id="loader-progress-bar"></div>
+         </div>
        </div>
      </div>
    </div>
@@ -286,7 +302,7 @@ def loading_html_and_script():
          });
 
          check();
-         setTimeout(dismissLoader, 150000);
+         setTimeout(dismissLoader, 200000);
        })();
      </script>"""
 
