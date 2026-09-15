@@ -24,6 +24,46 @@ from transit_reader import load_export
 HERE = Path(__file__).resolve().parent
 UUID = re.compile(r'^[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}$')
 REF = re.compile(r'\[\[([^\]]+)\]\]|\(\(([^)]+)\)\)')
+# Only these attachment formats can be opened on the site's origin. Everything
+# else gets an inert extension and download-only response headers.
+INLINE_ASSETS = {'.png', '.jpg', '.jpeg', '.webp', '.gif', '.avif', '.ico',
+                 '.mp3', '.ogg', '.wav', '.m4a', '.flac', '.mp4', '.webm', '.mov', '.pdf'}
+HEADERS = """/*
+  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' https:; font-src 'self'; connect-src 'self'; media-src 'self' https:; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+
+/downloads/*
+  Content-Type: application/octet-stream
+  Content-Disposition: attachment
+  Content-Security-Policy: sandbox; default-src 'none'; base-uri 'none'; form-action 'none'
+
+/site/garden-*
+  Cache-Control: public, max-age=31536000, immutable
+
+/site/*.json
+  Cache-Control: public, max-age=0, must-revalidate
+"""
+
+
+def published_asset_path(path):
+    path = Path(path)
+    if path.suffix.lower() in INLINE_ASSETS:
+        return path
+    return Path('downloads') / (str(path.relative_to('assets')) + '.download')
+
+
+def download_name(url):
+    parts = urlsplit(url)
+    if not parts.scheme and not parts.netloc and parts.path.startswith('/downloads/') and parts.path.endswith('.download'):
+        return unquote(parts.path.rsplit('/', 1)[-1])[:-len('.download')]
+    return None
+
+
+def download_attribute(url):
+    name = download_name(url)
+    return f' download="{escape(name, quote=True)}"' if name is not None else ''
 
 
 def values(value):
@@ -107,7 +147,10 @@ class Garden:
         original_link = self.md.renderer.rules.get('link_open')
         def link_open(tokens, idx, options, env):
             href = tokens[idx].attrGet('href') or ''
-            tokens[idx].attrSet('href', self.link_url(href))
+            href = self.link_url(href)
+            tokens[idx].attrSet('href', href)
+            if download_name(href) is not None:
+                tokens[idx].attrSet('download', download_name(href))
             if original_link:
                 return original_link(tokens, idx, options, env)
             return self.md.renderer.renderToken(tokens, idx, options, env)
@@ -192,7 +235,7 @@ class Garden:
         href = self.url(eid)
         self.record_link(eid)
         if href:
-            return f'<a class="page-ref" href="{escape(href, quote=True)}">{escape(label)}</a>'
+            return f'<a class="page-ref" href="{escape(href, quote=True)}"{download_attribute(href)}>{escape(label)}</a>'
         self.warnings.add(f'Unresolved reference: {meta["target"]}')
         return f'<span class="unavailable">{escape(label)}</span>'
 
@@ -203,14 +246,15 @@ class Garden:
         path = path.lstrip('/')
         if not path.startswith('assets/'):
             return None
-        candidate = self.source / path
-        if not candidate.resolve().is_relative_to((self.source / 'assets').resolve()):
+        candidate = (self.source / path).resolve()
+        if not candidate.is_relative_to(self.source.resolve() / 'assets'):
             raise ValueError(f'Asset path escapes assets directory: {raw}')
+        path = candidate.relative_to(self.source.resolve()).as_posix()
         if candidate.is_file():
             self.assets.add(path)
         else:
             self.warnings.add(f'Missing asset: {path}')
-        return '/' + quote(path, safe='/') + (('#' + urlsplit(raw).fragment) if urlsplit(raw).fragment else '')
+        return '/' + quote(published_asset_path(path).as_posix(), safe='/') + (('#' + urlsplit(raw).fragment) if urlsplit(raw).fragment else '')
 
     def link_url(self, raw):
         parts = urlsplit(raw)
@@ -238,6 +282,8 @@ class Garden:
         token = tokens[idx]
         src = self.link_url(token.attrGet('src') or '')
         alt = token.content
+        if download_name(src) is not None:
+            return f'<a class="attachment" href="{escape(src, quote=True)}"{download_attribute(src)}>{escape(alt or download_name(src))}</a>'
         return f'<img src="{escape(src, quote=True)}" alt="{escape(alt, quote=True)}" loading="lazy" decoding="async">'
 
     def code(self, text, lang='', attrs=''):
@@ -260,14 +306,14 @@ class Garden:
         src = self.link_url(raw)
         title = escape(n.get('block/title', 'Attachment'))
         href = escape(src, quote=True)
-        if ext in ('png','jpg','jpeg','webp','gif','svg','avif'):
+        if ext in ('png','jpg','jpeg','webp','gif','avif') and download_name(src) is None:
             dims = ''.join(f' {a}="{int(n[k])}"' for a, k in [('width','logseq.property.asset/width'),('height','logseq.property.asset/height')] if n.get(k))
             return f'<figure><a href="{href}"><img src="{href}" alt="{title}"{dims} loading="lazy" decoding="async"></a></figure>'
         if ext in ('mp3', 'ogg', 'wav', 'm4a', 'flac'):
             return f'<audio controls preload="none" src="{href}"></audio><p><a href="{href}">{title}</a></p>'
         if ext in ('mp4', 'webm', 'mov'):
             return f'<video controls preload="none" src="{href}"></video><p><a href="{href}">{title}</a></p>'
-        return f'<p class="attachment"><a href="{href}">↗ {title} <small>{escape(ext.upper())}</small></a></p>'
+        return f'<p class="attachment"><a href="{href}"{download_attribute(src)}>↗ {title} <small>{escape(ext.upper())}</small></a></p>'
 
     def properties(self, n):
         props = []
@@ -284,7 +330,7 @@ class Garden:
                     href = self.url(v)
                     if not href and re.fullmatch(r'https?://\S+', label_text):
                         href = self.link_url(label_text)
-                    items.append(f'<a href="{escape(href)}">{escape(label_text)}</a>' if href else self.md.renderInline(label_text))
+                    items.append(f'<a href="{escape(href)}"{download_attribute(href)}>{escape(label_text)}</a>' if href else self.md.renderInline(label_text))
                 elif isinstance(v, str):
                     if re.fullmatch(r'https?://\S+', v):
                         items.append(f'<a href="{escape(self.link_url(v))}">{escape(v)}</a>')
@@ -487,7 +533,7 @@ def build(source, output, config):
             if origin.is_file():
                 if origin.stat().st_size > 25 * 1024 * 1024:
                     raise ValueError(f'Asset exceeds Cloudflare Pages 25 MiB limit: {asset}')
-                target = dest / asset
+                target = dest / published_asset_path(asset)
                 target.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(origin, target)
         icon = HERE / 'branding/logo.png'
@@ -497,7 +543,7 @@ def build(source, output, config):
         shutil.copy2(icon, dest / 'static/img/logo.png')
         shutil.copy2(icon, dest / 'favicon.png')
         shutil.copy2(logo, dest / f'site/logo-{logo_hash}.svg')
-        (dest / '_headers').write_text('/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n\n/site/garden-*\n  Cache-Control: public, max-age=31536000, immutable\n\n/site/*.json\n  Cache-Control: public, max-age=0, must-revalidate\n')
+        (dest / '_headers').write_text(HEADERS, encoding='utf-8')
         base = config.get('url', '').rstrip('/')
         sitemap = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' + ''.join('<url><loc>' + escape(base + url) + '</loc></url>' for url in documents) + '</urlset>'
         (dest / 'sitemap.xml').write_text(sitemap, encoding='utf-8')

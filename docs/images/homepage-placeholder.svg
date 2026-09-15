@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="810" viewBox="0 0 1440 810" role="img" aria-labelledby="title desc">
+  <title id="title">Homepage screenshot placeholder</title>
+  <desc id="desc">Replace this placeholder with a screenshot of the garden.</desc>
+  <rect width="1440" height="810" rx="16" fill="#17181a"/>
+  <rect x="28" y="28" width="1384" height="754" rx="10" fill="none" stroke="#42434b" stroke-width="2" stroke-dasharray="8 8"/>
+  <g fill="#a99bd5" font-family="system-ui, sans-serif" text-anchor="middle">
+    <text x="720" y="398" font-size="36">Homepage</text>
+    <text x="720" y="444" font-size="20" fill="#9a9ba4">Screenshot goes here</text>
+  </g>
+</svg>
