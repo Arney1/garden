@@ -7,7 +7,6 @@ Written in Logseq, published as a static website.
 
 **[Visit the garden](https://arney-garden.pages.dev)** · **[Explore the graph](https://arney-garden.pages.dev/graph/)** · **[Exporter docs](static-garden/README.md)**
 
-<!-- Replace this image with docs/images/homepage.png when the screenshot is ready. -->
 ![Homepage screenshot placeholder](docs/images/homepage.png)
 
 ## Why I built this
@@ -34,7 +33,6 @@ mark and a layout that works as both a portfolio and a garden.
 - **A small browser runtime.** Plain CSS, JavaScript, and Canvas. No React,
   database workers, or WASM in the published site.
 
-<!-- Replace this image with docs/images/graph.png when the screenshot is ready. -->
 ![Graph view screenshot placeholder](docs/images/graph.png)
 
 ## The size difference
