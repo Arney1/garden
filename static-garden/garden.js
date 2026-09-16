@@ -1,3 +1,4 @@
+/*! Copyright (c) 2026 Arney Nova. MIT License; see /licenses/MIT.txt. */
 /* Optional enhancements. All page content and navigation are ordinary HTML. */
 (() => {
   const openAnchor = () => {

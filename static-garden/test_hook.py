@@ -87,6 +87,16 @@ assert not root.joinpath('assets/untracked.txt').exists(), 'Untracked asset was 
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('Run ./build-static.sh', result.stderr)
 
+    def test_license_changes_trigger_staged_build_validation(self):
+        self.write('index.html', 'broken export in baseline')
+        self.git('add', 'index.html')
+        self.git('-c', 'user.name=Hook Test', '-c', 'user.email=test@example.invalid', 'commit', '-qm', 'Broken baseline')
+        self.write('licenses/MIT.txt', 'license fixture')
+        self.git('add', 'licenses/MIT.txt')
+        result = self.run_hook()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('staged version does not build', result.stderr)
+
     def test_hook_install_preserves_original_and_is_idempotent(self):
         installer = HERE.parent / 'install-hooks.sh'
         shutil.copy2(installer, self.root/'install-hooks.sh')

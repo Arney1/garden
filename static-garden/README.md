@@ -141,3 +141,15 @@ a sitemap, and a real `404.html` rather than an SPA fallback.
 Tests cover Transit decoding, rendering, page filtering, reference handling,
 attachment containment, script injection, download routing, generated security
 headers, and the hook's behavior with real isolated Git indices.
+
+## License
+
+The original exporter, browser code, and build tools are [MIT licensed](../licenses/MIT.txt);
+see [LICENSE.md](../LICENSE.md) for the exact scope. The original Logseq export
+remains under its upstream terms. [Third-party notices](../THIRD_PARTY_NOTICES.md)
+include the source revision embedded in the export and the bundled license texts.
+
+The build copies `licenses/`, the license scope, and third-party notices into
+`dist/licenses/`, linked from each page's footer. Keep these files with the
+exporter when copying it to another project. The hook validates licensing changes
+as build inputs. Garden content and branding are not covered by the MIT grant.

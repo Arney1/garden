@@ -118,6 +118,11 @@ class SecurityTests(unittest.TestCase):
         self.assertEqual((output / 'downloads/demo.html.download').read_text(), payload)
         self.assertEqual((output / 'assets/photo.png').read_bytes(), b'fixture')
         self.assertIn('download="demo.html"', (output / 'index.html').read_text())
+        self.assertIn('href="/licenses/"', (output / 'index.html').read_text())
+        self.assertTrue((output / 'licenses/index.html').is_file())
+        self.assertIn('Permission is hereby granted', (output / 'licenses/MIT.txt').read_text())
+        self.assertTrue((output / 'licenses/pygments/LICENSE.txt').is_file())
+        self.assertTrue((output / 'licenses/THIRD_PARTY_NOTICES.md').is_file())
         headers = (output / '_headers').read_text()
         self.assertIn("script-src 'self'", headers)
         self.assertIn("frame-ancestors 'none'", headers)
@@ -129,6 +134,16 @@ class SecurityTests(unittest.TestCase):
         self.assertIn('Content-Security-Policy: sandbox;', downloads)
         self.assertNotIn("'unsafe-inline'", headers)
         self.assertNotIn("'unsafe-eval'", headers)
+
+    def test_missing_license_does_not_replace_previous_site(self):
+        output = self.root / 'dist'
+        output.mkdir()
+        (output / '.static-garden-build').write_text('fixture')
+        (output / 'index.html').write_text('previous site')
+        with patch('build.HERE', self.source / 'static-garden'):
+            with self.assertRaisesRegex(ValueError, 'Required license notice missing'):
+                build(self.source, output, self.config)
+        self.assertEqual((output / 'index.html').read_text(), 'previous site')
 
 
 if __name__ == '__main__':

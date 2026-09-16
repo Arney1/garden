@@ -1,3 +1,4 @@
+/*! Copyright (c) 2026 Arney Nova. MIT License; see /licenses/MIT.txt. */
 /* Graph data and drawing code load only on /graph/. No database or runtime layout. */
 (async () => {
   const host = document.getElementById('graph');

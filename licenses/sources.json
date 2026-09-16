@@ -1,0 +1,281 @@
+[
+  {
+    "file": "licenses/dompurify/LICENSE.txt",
+    "source": "https://registry.npmjs.org/dompurify/-/dompurify-3.4.2.tgz",
+    "package": "dompurify",
+    "license_source_version": "3.4.2",
+    "archive_sha1": "f0ff81be682c485505097ba8195a058d8f575218",
+    "sha256": "968bdd5b053aa290a16cd073416c5ae4a8daa51076e43f2df423b9c4e2ccda0a"
+  },
+  {
+    "file": "licenses/eventemitter3/LICENSE.txt",
+    "source": "https://registry.npmjs.org/eventemitter3/-/eventemitter3-5.0.1.tgz",
+    "package": "eventemitter3",
+    "license_source_version": "5.0.1",
+    "archive_sha1": "53f5ffd0a492ac800721bb42c66b841de96423c4",
+    "sha256": "3aecc12b1cb28832b5f65ab64291de96568c3f236a74d646281b4491f7bcadbf"
+  },
+  {
+    "file": "licenses/glidejs--glide/LICENSE.txt",
+    "source": "https://registry.npmjs.org/@glidejs/glide/-/glide-3.7.1.tgz",
+    "package": "@glidejs/glide",
+    "license_source_version": "3.7.1",
+    "archive_sha1": "cd3fb256006d9c7aec2f95873d268410df2ab0ce",
+    "sha256": "b8065a57bc20f7131f15c1dae1663334275dc459e885036dfc3fe5725fc3d04d"
+  },
+  {
+    "file": "licenses/highlightjs--cdn-assets/LICENSE.txt",
+    "source": "https://registry.npmjs.org/@highlightjs/cdn-assets/-/cdn-assets-11.11.1.tgz",
+    "package": "@highlightjs/cdn-assets",
+    "license_source_version": "11.11.1",
+    "archive_sha1": "136984ae467865e22080b3a4b65398a086e1ae7b",
+    "sha256": "6c081431591d9df696c82dc598fe1423765b8a299b200ed00b281afd0f64c490"
+  },
+  {
+    "file": "licenses/html2canvas/LICENSE.txt",
+    "source": "https://registry.npmjs.org/html2canvas/-/html2canvas-1.4.1.tgz",
+    "package": "html2canvas",
+    "license_source_version": "1.4.1",
+    "archive_sha1": "7cef1888311b5011d507794a066041b14669a543",
+    "sha256": "86200ce4e92d9a22c41c8647a55f7a5fddff304ff89b4d36ecc699ed8c123d2c"
+  },
+  {
+    "file": "licenses/inter-ui/LICENSE.txt",
+    "source": "https://registry.npmjs.org/inter-ui/-/inter-ui-4.1.1.tgz",
+    "package": "inter-ui",
+    "license_source_version": "4.1.1",
+    "archive_sha1": "8d7e800259caeb4293167564ddc2b12dbf2ba59d",
+    "sha256": "cc36dd53b88f8c7f138b9708e0c4b598816e4e52c7e252859e67e1e7edbcf117"
+  },
+  {
+    "file": "licenses/interactjs/LICENSE.txt",
+    "source": "https://registry.npmjs.org/interactjs/-/interactjs-1.10.27.tgz",
+    "package": "interactjs",
+    "license_source_version": "1.10.27",
+    "archive_sha1": "16499aba4987a5ccfdaddca7d1ba7bb1118e14d0",
+    "sha256": "e805e2367aed149858263a4ae0a62168146af837a9ba3095aa01d02c8559e7fe"
+  },
+  {
+    "file": "licenses/isomorphic-git--lightning-fs/LICENSE.txt",
+    "source": "https://registry.npmjs.org/@isomorphic-git/lightning-fs/-/lightning-fs-4.6.2.tgz",
+    "package": "@isomorphic-git/lightning-fs",
+    "license_source_version": "4.6.2",
+    "archive_sha1": "3071b63ac564f65ef67726743567448c23a9a16e",
+    "sha256": "df563bf6740c35bef4afefe212b1227499bddd83c39283bbe8a07b4d89c17cf1"
+  },
+  {
+    "file": "licenses/katex/LICENSE.txt",
+    "source": "https://registry.npmjs.org/katex/-/katex-0.16.45.tgz",
+    "package": "katex",
+    "license_source_version": "0.16.45",
+    "archive_sha1": "ba60d39c54746b6b8d39ce0e7f6eace07143149c",
+    "sha256": "766ccc1f306c885aa45542a9846bbd0a505b27a0374f146778171c2254ce18e3"
+  },
+  {
+    "file": "licenses/magic-portal/LICENSE.txt",
+    "source": "https://registry.npmjs.org/magic-portal/-/magic-portal-1.0.0.tgz",
+    "package": "magic-portal",
+    "license_source_version": "1.0.0",
+    "archive_sha1": "b7c07e6675e11428b42649807430b2628b214bd1",
+    "sha256": "3abdaf93a62d84fa5ab9d88b9baf6f5cfcdc8274fb5f7b6332c54d1e93ec70e9"
+  },
+  {
+    "file": "licenses/marked/LICENSE.md.txt",
+    "source": "https://registry.npmjs.org/marked/-/marked-17.0.6.tgz",
+    "package": "marked",
+    "license_source_version": "17.0.6",
+    "archive_sha1": "2a97586a272d3be5880f198e020b74ad27cf86ba",
+    "sha256": "8e3a3f82f59a60958f56ca08f445647c32a4733dc7ca6c2c46f6eb898471ab9c"
+  },
+  {
+    "file": "licenses/pdfjs-dist/standard_fonts--LICENSE_FOXIT.txt",
+    "source": "https://registry.npmjs.org/pdfjs-dist/-/pdfjs-dist-4.2.67.tgz",
+    "package": "pdfjs-dist",
+    "license_source_version": "4.2.67",
+    "archive_sha1": "dd2a65a4b00d95cd4bc2c1f6a27c5e9eb31d512a",
+    "sha256": "b578cdd2345840ada550bd12519533812320d5f1d21cf4c1c7e1b1b0a31c98b7"
+  },
+  {
+    "file": "licenses/pdfjs-dist/LICENSE.txt",
+    "source": "https://registry.npmjs.org/pdfjs-dist/-/pdfjs-dist-4.2.67.tgz",
+    "package": "pdfjs-dist",
+    "license_source_version": "4.2.67",
+    "archive_sha1": "dd2a65a4b00d95cd4bc2c1f6a27c5e9eb31d512a",
+    "sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594"
+  },
+  {
+    "file": "licenses/pdfjs-dist/cmaps--LICENSE.txt",
+    "source": "https://registry.npmjs.org/pdfjs-dist/-/pdfjs-dist-4.2.67.tgz",
+    "package": "pdfjs-dist",
+    "license_source_version": "4.2.67",
+    "archive_sha1": "dd2a65a4b00d95cd4bc2c1f6a27c5e9eb31d512a",
+    "sha256": "aa92ab5a472974865a96fd4a4e9c13bb41bf6fe1b309cb6b8da48bc9e19839a2"
+  },
+  {
+    "file": "licenses/pdfjs-dist/standard_fonts--LICENSE_LIBERATION.txt",
+    "source": "https://registry.npmjs.org/pdfjs-dist/-/pdfjs-dist-4.2.67.tgz",
+    "package": "pdfjs-dist",
+    "license_source_version": "4.2.67",
+    "archive_sha1": "dd2a65a4b00d95cd4bc2c1f6a27c5e9eb31d512a",
+    "sha256": "93fed46019c38bbe566b479d22148e2e8a1e85ada614accb0211c37b2c61c19b"
+  },
+  {
+    "file": "licenses/photoswipe/LICENSE.txt",
+    "source": "https://registry.npmjs.org/photoswipe/-/photoswipe-5.4.4.tgz",
+    "package": "photoswipe",
+    "license_source_version": "5.4.4",
+    "archive_sha1": "e045dc036453493188d5c8665b0e8f1000ac4d6e",
+    "sha256": "2c223af0b21d32240087ee189eb70fd315907b6ade8b561e24265baccd6a98e7"
+  },
+  {
+    "file": "licenses/prop-types/LICENSE.txt",
+    "source": "https://registry.npmjs.org/prop-types/-/prop-types-15.8.1.tgz",
+    "package": "prop-types",
+    "license_source_version": "15.8.1",
+    "archive_sha1": "67d87bf1a694f48435cf332c24af10214a3140b5",
+    "sha256": "f657f99d3fb9647db92628e96007aabb46e5f04f33e49999075aab8e250ca7ce"
+  },
+  {
+    "file": "licenses/react/LICENSE.txt",
+    "source": "https://registry.npmjs.org/react/-/react-19.2.6.tgz",
+    "package": "react",
+    "license_source_version": "19.2.6",
+    "archive_sha1": "3dadb8e12b2a7934c1d5317973e5dce1301f9a4d",
+    "sha256": "da6d3703ed11cbe42bd212c725957c98da23cbff1998c05fa4b3d976d1a58e93"
+  },
+  {
+    "file": "licenses/react-dom/LICENSE.txt",
+    "source": "https://registry.npmjs.org/react-dom/-/react-dom-19.2.6.tgz",
+    "package": "react-dom",
+    "license_source_version": "19.2.6",
+    "archive_sha1": "44a81b0bcca22da814c00847d09d01c8615529b7",
+    "sha256": "da6d3703ed11cbe42bd212c725957c98da23cbff1998c05fa4b3d976d1a58e93"
+  },
+  {
+    "file": "licenses/tabler--icons-react/LICENSE.txt",
+    "source": "https://registry.npmjs.org/@tabler/icons-react/-/icons-react-3.44.0.tgz",
+    "package": "@tabler/icons-react",
+    "license_source_version": "3.44.0",
+    "archive_sha1": "26e84ee0ef756bfae5dcbd8265312ba3cd5a91d9",
+    "sha256": "b740a1d46122672da62833e97f7e7c8a13fa85cbc7445b584b297cc00dde93db"
+  },
+  {
+    "file": "licenses/markdown-it-py/LICENSE.txt",
+    "source": "https://pypi.org/project/markdown-it-py/4.2.0/",
+    "package": "markdown-it-py",
+    "license_source_version": "4.2.0",
+    "sha256": "4a2260d6e2cd0f5a151a1e86dbfe7d3ed552b1e2beabf9941c1ba5c49cbce484"
+  },
+  {
+    "file": "licenses/markdown-it-py/LICENSE.markdown-it.txt",
+    "source": "https://pypi.org/project/markdown-it-py/4.2.0/",
+    "package": "markdown-it-py",
+    "license_source_version": "4.2.0",
+    "sha256": "792c48c5a849a15fdf9e37e8bcf9e6d1dd13b32b46c642a748a0a46a9919d473"
+  },
+  {
+    "file": "licenses/mdit-py-plugins/LICENSE.txt",
+    "source": "https://pypi.org/project/mdit-py-plugins/0.6.1/",
+    "package": "mdit-py-plugins",
+    "license_source_version": "0.6.1",
+    "sha256": "4a2260d6e2cd0f5a151a1e86dbfe7d3ed552b1e2beabf9941c1ba5c49cbce484"
+  },
+  {
+    "file": "licenses/mdit-py-plugins/mdit_py_plugins--admon--LICENSE.txt",
+    "source": "https://pypi.org/project/mdit-py-plugins/0.6.1/",
+    "package": "mdit-py-plugins",
+    "license_source_version": "0.6.1",
+    "sha256": "699355a44cb248631a4cde542029b593b7e6663823b0518338e85fd65360bac3"
+  },
+  {
+    "file": "licenses/mdit-py-plugins/mdit_py_plugins--container--LICENSE.txt",
+    "source": "https://pypi.org/project/mdit-py-plugins/0.6.1/",
+    "package": "mdit-py-plugins",
+    "license_source_version": "0.6.1",
+    "sha256": "c91339910d300f163edcaddbfb3909f1cffae19a496b7fe3935a9a4073dc305a"
+  },
+  {
+    "file": "licenses/mdit-py-plugins/mdit_py_plugins--deflist--LICENSE.txt",
+    "source": "https://pypi.org/project/mdit-py-plugins/0.6.1/",
+    "package": "mdit-py-plugins",
+    "license_source_version": "0.6.1",
+    "sha256": "81d61236a5f25294b2dad0c866d4ad6a40b865148b28df9a71f49ba771a6c54b"
+  },
+  {
+    "file": "licenses/mdit-py-plugins/mdit_py_plugins--footnote--LICENSE.txt",
+    "source": "https://pypi.org/project/mdit-py-plugins/0.6.1/",
+    "package": "mdit-py-plugins",
+    "license_source_version": "0.6.1",
+    "sha256": "81d61236a5f25294b2dad0c866d4ad6a40b865148b28df9a71f49ba771a6c54b"
+  },
+  {
+    "file": "licenses/mdit-py-plugins/mdit_py_plugins--front_matter--LICENSE.txt",
+    "source": "https://pypi.org/project/mdit-py-plugins/0.6.1/",
+    "package": "mdit-py-plugins",
+    "license_source_version": "0.6.1",
+    "sha256": "9e1bc1fafae020b5c33cc9cb745c707a5addf109cd814f0dac2d41424b83554a"
+  },
+  {
+    "file": "licenses/mdit-py-plugins/mdit_py_plugins--texmath--LICENSE.txt",
+    "source": "https://pypi.org/project/mdit-py-plugins/0.6.1/",
+    "package": "mdit-py-plugins",
+    "license_source_version": "0.6.1",
+    "sha256": "012a56cf9e23a2917336178cca417ab4c88fc64ad7086d621d6a8b956593629f"
+  },
+  {
+    "file": "licenses/pygments/AUTHORS.txt",
+    "source": "https://pypi.org/project/Pygments/2.21.0/",
+    "package": "Pygments",
+    "license_source_version": "2.21.0",
+    "sha256": "71a83872ad82f57be692cf827e048e2cd51d45169cfa1ea3f28706d97a872c0f"
+  },
+  {
+    "file": "licenses/pygments/LICENSE.txt",
+    "source": "https://pypi.org/project/Pygments/2.21.0/",
+    "package": "Pygments",
+    "license_source_version": "2.21.0",
+    "sha256": "a9d66f1d526df02e29dce73436d34e56e8632f46c275bbdffc70569e882f9f17"
+  },
+  {
+    "file": "licenses/mdurl/LICENSE.txt",
+    "source": "https://pypi.org/project/mdurl/0.1.2/",
+    "package": "mdurl",
+    "license_source_version": "0.1.2",
+    "sha256": "7c605df6e28667a9603118e98274f64a49ce3eed0d26fccce9534a345e0ef955"
+  },
+  {
+    "file": "licenses/KaTeX-FONTS.txt",
+    "source": "https://raw.githubusercontent.com/KaTeX/katex-fonts/master/LICENSE",
+    "sha256": "a7bd44abd8419bf78185be51f34216356af1adb0806ce39d6a9ca0940bd49b70"
+  },
+  {
+    "file": "licenses/Tabler-2.47.0.txt",
+    "source": "https://raw.githubusercontent.com/tabler/tabler-icons/v2.47.0/LICENSE",
+    "sha256": "896d3e36cb41d19f279ce9ffb085a9f0d96e58db59c18f042242ff6c7e78d50f"
+  },
+  {
+    "file": "licenses/Emscripten.txt",
+    "source": "https://raw.githubusercontent.com/emscripten-core/emscripten/5.0.0/LICENSE",
+    "sha256": "620a78084fc7ca97c0b5dea9abf891f3ffcadfdbf305276f099c9c4e12fc1d86"
+  },
+  {
+    "file": "licenses/ClojureScript.txt",
+    "source": "https://raw.githubusercontent.com/clojure/clojurescript/master/epl-v10.html",
+    "sha256": "d0d35c5fb45696fcaa98858f6c1f1cf0d41400302f4adb966eb9a54fa9b9a226"
+  },
+  {
+    "file": "licenses/Closure.txt",
+    "source": "https://raw.githubusercontent.com/google/closure-library/master/LICENSE",
+    "sha256": "a6cba85bc92e0cff7a450b1d873c0eaa2e9fc96bf472df0247a26bec77bf3ff9"
+  },
+  {
+    "file": "licenses/DOMPurify-3.3.3.txt",
+    "source": "https://raw.githubusercontent.com/cure53/DOMPurify/3.3.3/LICENSE",
+    "sha256": "1b02e03c3fb4f87d476c128f0eb9def1f5a1709d28b180465228bd41574623b7"
+  },
+  {
+    "file": "licenses/Logseq-AGPL-3.0.txt",
+    "source": "https://raw.githubusercontent.com/logseq/logseq/b09316abd7bde39d25c6c5694d01b2d4e874fe01/LICENSE.md",
+    "sha256": "2467b8901ba62f7708c479944468a677897472a39ecbda1d23818ecf9538620b"
+  }
+]

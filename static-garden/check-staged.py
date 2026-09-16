@@ -13,7 +13,7 @@ def git(root, *args):
 
 
 def relevant(name):
-    return name in ('index.html', 'build-static.sh') or name.startswith(('assets/', 'static-garden/', 'static/js/katex.min.js'))
+    return name in ('index.html', 'build-static.sh', 'LICENSE.md', 'THIRD_PARTY_NOTICES.md') or name.startswith(('assets/', 'static-garden/', 'static/js/katex.min.js', 'licenses/'))
 
 
 def check(root):

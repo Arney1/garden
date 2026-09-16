@@ -430,7 +430,7 @@ class Garden:
 <div class="sidebar-note"><span class="status-dot"></span> Always growing.<p>Notes, things I make,<br>and things I’m figuring out.</p></div></aside>
 <div class="workspace"><header class="topbar"><a href="/">{site}<span> / {('home' if home else 'garden')}</span></a><a href="/pages/#search" aria-label="Search the garden">⌕ <span>Find a note</span></a></header>
 <main id="content" class="{'graph-page' if url == '/graph/' else 'home' if home else 'note'}">{subtitle}<h1>{escape(title)}</h1>{meta}{body}</main>
-<footer>Made of curiosity. <a href="/pages/">Wander the garden ↗</a></footer></div></body></html>'''
+<footer>Made of curiosity. <a href="/licenses/">Licenses</a><a href="/pages/">Wander the garden ↗</a></footer></div></body></html>'''
 
 
 def render_math(garden):
@@ -463,6 +463,17 @@ def build(source, output, config):
         raise ValueError('Output must not replace or contain the original export')
     if output.exists() and any(output.iterdir()) and not (output / '.static-garden-build').is_file():
         raise ValueError('Refusing to replace a non-generated output directory')
+    project = HERE.parent
+    required_notices = ['LICENSE.md', 'THIRD_PARTY_NOTICES.md', 'licenses/MIT.txt',
+                        'licenses/Logseq-AGPL-3.0.txt', 'licenses/pygments/LICENSE.txt',
+                        'licenses/katex/LICENSE.txt', 'licenses/sources.json']
+    for notice in required_notices:
+        if not (project / notice).is_file():
+            raise ValueError(f'Required license notice missing: {notice}')
+    license_files = {p.relative_to(project).as_posix(): p.read_bytes()
+                     for p in (project / 'licenses').rglob('*') if p.is_file()}
+    license_files['licenses/PROJECT-LICENSE.md'] = (project / 'LICENSE.md').read_bytes()
+    license_files['licenses/THIRD_PARTY_NOTICES.md'] = (project / 'THIRD_PARTY_NOTICES.md').read_bytes()
     entities = read_entities(load_export(source / 'index.html'))
     garden = Garden(entities, source, config)
     css = (HERE / 'garden.css').read_text() + '\n' + HtmlFormatter(style='native').get_style_defs('pre')
@@ -506,6 +517,18 @@ def build(source, output, config):
 <noscript><p>Enable JavaScript to explore the interactive graph. You can still <a href="/pages/">browse all pages</a> and follow linked references in each note.</p></noscript>'''
     documents['/graph/'] = garden.shell('Graph view', graph_body, '/graph/', css_url, js_url,
                                       extra_head=f'<link rel="stylesheet" href="{graph_files["css"][0]}"><script defer src="{graph_files["js"][0]}"></script>')
+    credits = '''<p>The static exporter and its original browser code are licensed under the
+<a href="/licenses/MIT.txt">MIT License</a>, copyright 2026 Arney Nova.
+Code highlighting includes Pygments stylesheet output under the
+<a href="/licenses/pygments/LICENSE.txt">BSD 2-Clause license</a>.</p>
+<p>Notes, attachments, screenshots, and branding retain their own rights.
+This is an unofficial project built for Logseq.</p>
+<p>See the repository's <a href="https://github.com/Arney1/garden/blob/main/LICENSE.md">license scope</a>
+and <a href="https://github.com/Arney1/garden/blob/main/THIRD_PARTY_NOTICES.md">third-party notices and source links</a>.
+The notices below also cover build tools and the original Logseq export retained in the repository.</p>'''
+    credits += '<ul>' + ''.join(f'<li><a href="/{quote(name, safe="/")}">{escape(name.removeprefix("licenses/"))}</a></li>'
+                               for name in sorted(license_files)) + '</ul>'
+    documents['/licenses/'] = garden.shell('Licenses', credits, '/licenses/', css_url, js_url)
     error_page = garden.shell('This path hasn’t grown yet.', '<p>This page may have moved. <a href="/pages/">Find it in the garden</a>.</p>', '/404.html', css_url, js_url)
     equations = render_math(garden)
     pattern = re.compile(r'<!--GARDEN_MATH_(\d+)-->')
@@ -522,6 +545,10 @@ def build(source, output, config):
         (dest / js_url.lstrip('/')).write_text(js, encoding='utf-8')
         for name, content in graph_files.values():
             (dest / name.lstrip('/')).write_text(content, encoding='utf-8')
+        for name, content in license_files.items():
+            target = dest / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(content)
         (dest / 'site/search.json').write_text(json.dumps(search, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
         routes = {n['block/uuid']: garden.urls[i] for i,n in garden.pages.items()}
         routes.update({name: garden.urls[i] for name,i in garden.names.items()})

@@ -92,3 +92,12 @@ attachment policy, tests, and known limits.
 The deployed site uses a strict Content Security Policy and download-only handling
 for non-media attachments. Content and attachments in this repository are public;
 the exporter does not scan them for secrets.
+
+## License
+
+The original static exporter and its build tools are [MIT licensed](licenses/MIT.txt).
+Logseq's bundled runtime retains AGPLv3 terms, and third-party libraries and fonts
+retain their own licenses. This is an unofficial project.
+
+Notes, attachments, screenshots, and branding are outside the software license.
+See [license scope](LICENSE.md) and [third-party notices and source links](THIRD_PARTY_NOTICES.md).
