@@ -419,8 +419,23 @@ class Garden:
         meta = f'<p class="page-meta">Updated {escape(date)}</p>' if date else ''
         logo_hash = sha256((HERE / 'branding/logo.svg').read_bytes()).hexdigest()[:12]
         document_title = site + ' · Portfolio & Garden' if home else escape(title) + ' · ' + site
+        icons = {
+            'Home': '<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/>',
+            'Pages': '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/>',
+            'Search': '<circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/>',
+            'Graph': '<path d="m7 7 9 3M6 8l4 9m6-5-4 5"/><circle cx="5" cy="5" r="3"/><circle cx="19" cy="11" r="3"/><circle cx="11" cy="20" r="2"/>',
+            'Explore': '<path d="M4 7h16M4 12h16M4 17h16"/>',
+        }
+        def icon(label):
+            return f'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{icons[label]}</svg>'
+        mobile_links = ''.join(f'<a href="{href}"' + (' aria-current="page"' if url == href else '')
+                               + f'>{icon(label)}<span>{label}</span></a>'
+                               for label, href in [('Home', '/'), ('Pages', '/pages/'), ('Search', '/pages/#search'), ('Graph', '/graph/')])
+        mobile_nav = f'''<nav class="mobile-nav" aria-label="Mobile navigation">{mobile_links}
+<details class="mobile-explore"><summary>{icon('Explore')}<span>Explore</span></summary>
+<div class="mobile-explore-panel"><p>Paths through the garden</p>{''.join(nav)}<a href="/licenses/">Licenses</a></div></details></nav>'''
         return f'''<!doctype html>
-<html lang="{escape(self.config.get('language', 'en'))}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<html lang="{escape(self.config.get('language', 'en'))}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>{document_title}</title><meta name="description" content="{desc}">
 <link rel="canonical" href="{escape(canonical, quote=True)}"><meta property="og:title" content="{escape(title, quote=True)}"><meta property="og:description" content="{desc}"><meta property="og:type" content="website"><meta property="og:url" content="{escape(canonical, quote=True)}">
 <link rel="icon" type="image/svg+xml" href="/site/logo-{logo_hash}.svg"><link rel="icon" type="image/png" sizes="512x512" href="/static/img/logo.png?v={logo_hash}"><link rel="apple-touch-icon" href="/static/img/logo.png?v={logo_hash}"><meta property="og:image" content="{escape(self.config.get('url', '').rstrip('/'), quote=True)}/static/img/logo.png"><link rel="stylesheet" href="{css}"><script src="{js}" defer></script>{extra_head}</head>
@@ -430,7 +445,7 @@ class Garden:
 <div class="sidebar-note"><span class="status-dot"></span> Always growing.<p>Notes, things I make,<br>and things I’m figuring out.</p></div></aside>
 <div class="workspace"><header class="topbar"><a href="/">{site}<span> / {('home' if home else 'garden')}</span></a><a href="/pages/#search" aria-label="Search the garden">⌕ <span>Find a note</span></a></header>
 <main id="content" class="{'graph-page' if url == '/graph/' else 'home' if home else 'note'}">{subtitle}<h1>{escape(title)}</h1>{meta}{body}</main>
-<footer>Made of curiosity. <a href="/licenses/">Licenses</a><a href="/pages/">Wander the garden ↗</a></footer></div></body></html>'''
+<footer>Made of curiosity. <a href="/licenses/">Licenses</a><a href="/pages/">Wander the garden ↗</a></footer></div>{mobile_nav}</body></html>'''
 
 
 def render_math(garden):

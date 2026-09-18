@@ -1,6 +1,18 @@
 /*! Copyright (c) 2026 Arney Nova. MIT License; see /licenses/MIT.txt. */
 /* Optional enhancements. All page content and navigation are ordinary HTML. */
 (() => {
+  const explore = document.querySelector('.mobile-explore');
+  if (explore) {
+    document.addEventListener('click', event => {
+      if (!explore.contains(event.target) || event.target.closest('a')) explore.open = false;
+    });
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && explore.open) {
+        explore.open = false;
+        explore.querySelector('summary').focus();
+      }
+    });
+  }
   const openAnchor = () => {
     if (!location.hash.startsWith('#block-')) return;
     const target = document.getElementById(location.hash.slice(1));

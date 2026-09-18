@@ -7,6 +7,11 @@
   const context = canvas.getContext('2d');
   const status = document.getElementById('graph-status');
   const detail = document.getElementById('graph-detail');
+  const preview = document.createElement('div');
+  preview.className = 'graph-touch-preview';
+  preview.hidden = true;
+  preview.setAttribute('aria-live', 'polite');
+  canvas.parentElement.append(preview);
   const search = document.getElementById('graph-search');
   const searchResults = document.getElementById('graph-results');
   const local = document.getElementById('graph-local');
@@ -88,6 +93,9 @@
   }
   function showDetail() {
     detail.replaceChildren();
+    preview.replaceChildren();
+    preview.hidden = selected < 0;
+    canvas.parentElement.classList.toggle('has-selection', selected >= 0);
     const heading=document.createElement('h2');
     if (selected < 0) {
       heading.textContent='Follow a connection';
@@ -96,6 +104,9 @@
       detail.append(heading,info); return;
     }
     const n=nodes[selected]; heading.textContent=n.title;
+    const previewTitle=document.createElement('span');previewTitle.textContent=n.title;
+    const previewOpen=document.createElement('a');previewOpen.href=n.url;previewOpen.textContent='Open page ↗';
+    preview.append(previewTitle,previewOpen);
     const open=document.createElement('a');open.className='graph-open';open.href=n.url;open.textContent='Open page ↗';
     const caption=document.createElement('p');caption.textContent=`${neighbors[selected].size} connected pages`;
     const list=document.createElement('ul');list.className='graph-neighbors';
@@ -115,9 +126,10 @@
     const next=Math.max(.03,Math.min(5,scale*factor));
     offsetX=x-(x-offsetX)*(next/scale);offsetY=y-(y-offsetY)*(next/scale);scale=next;requestDraw();
   }
-  function hit(x,y) {
+  function hit(x,y,touch=false) {
     let nearest=-1,distance=Infinity;
-    for (const i of visible) { const p=point(nodes[i]);const d=Math.hypot(p.x-x,p.y-y);if(d<Math.max(10,radius(i)+4)&&d<distance){nearest=i;distance=d;} }
+    // Screen-space targets stay finger-sized even when the graph is zoomed out.
+    for (const i of visible) { const p=point(nodes[i]);if(p.x<0||p.x>width||p.y<0||p.y>height)continue;const d=Math.hypot(p.x-x,p.y-y);if(d<Math.max(touch?24:10,radius(i)+4)&&d<distance){nearest=i;distance=d;} }
     return nearest;
   }
   const position = event => { const r=canvas.getBoundingClientRect();return {x:event.clientX-r.left,y:event.clientY-r.top}; };
@@ -126,18 +138,22 @@
   canvas.addEventListener('pointerdown',event=>{
     if(event.button!==0) return;
     const p=position(event);pointers.set(event.pointerId,p);canvas.setPointerCapture(event.pointerId);
-    if(pointers.size===1) drag={id:hit(p.x,p.y),x:p.x,y:p.y,startX:p.x,startY:p.y,moved:false};
+    if(pointers.size===1) {
+      const touch=event.pointerType==='touch';
+      // The wider tap target must not turn a nearby background pan into a node drag.
+      drag={id:hit(p.x,p.y,touch),node:hit(p.x,p.y),touch,x:p.x,y:p.y,startX:p.x,startY:p.y,moved:false};
+    }
     else { const [a,b]=[...pointers.values()];pinchDistance=Math.hypot(a.x-b.x,a.y-b.y);if(drag)drag.moved=true; }
   });
   canvas.addEventListener('pointermove',event=>{
     const p=position(event);
-    if(!pointers.has(event.pointerId)){const i=hit(p.x,p.y);if(i!==hovered){hovered=i;canvas.style.cursor=i<0?'grab':'pointer';requestDraw();}return;}
+    if(!pointers.has(event.pointerId)){if(event.pointerType==='touch')return;const i=hit(p.x,p.y);if(i!==hovered){hovered=i;canvas.style.cursor=i<0?'grab':'pointer';requestDraw();}return;}
     pointers.set(event.pointerId,p);
     if(pointers.size===2){const [a,b]=[...pointers.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);if(pinchDistance>0)zoom(d/pinchDistance,(a.x+b.x)/2,(a.y+b.y)/2);pinchDistance=d;return;}
     if(!drag)return;
     const dx=p.x-drag.x,dy=p.y-drag.y;
-    if(Math.hypot(p.x-drag.startX,p.y-drag.startY)>4)drag.moved=true;
-    if(drag.moved){if(drag.id>=0){nodes[drag.id].x+=dx/scale;nodes[drag.id].y+=dy/scale;}else{offsetX+=dx;offsetY+=dy;}}
+    if(Math.hypot(p.x-drag.startX,p.y-drag.startY)>(drag.touch?10:4))drag.moved=true;
+    if(drag.moved){if(drag.node>=0){nodes[drag.node].x+=dx/scale;nodes[drag.node].y+=dy/scale;}else{offsetX+=dx;offsetY+=dy;}}
     drag.x=p.x;drag.y=p.y;requestDraw();
   });
   const release = (event,cancelled=false) => {
