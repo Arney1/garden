@@ -7,7 +7,7 @@ Written in Logseq, published as a static website.
 
 **[Visit the garden](https://arney-garden.pages.dev)** · **[Explore the graph](https://arney-garden.pages.dev/graph/)** · **[Exporter docs](static-garden/README.md)**
 
-![Homepage screenshot placeholder](docs/images/homepage.png)
+![Garden homepage](docs/images/homepage.png)
 
 ## Why I built this
 
@@ -26,14 +26,17 @@ mark and a layout that works as both a portfolio and a garden.
 - **Connected writing.** Page links, block references, backlinks, tags, and nested
   pages carry over from the public export.
 - **An interactive graph.** Pan, zoom, drag nodes, search for a page, or focus on
-  its neighbors. Layout is computed during the build; the viewer loads on `/graph/`.
+  its neighbors. On phones, larger touch targets and a selected-page preview make
+  nodes easier to open. Layout is computed during the build; the viewer loads on `/graph/`.
+- **Navigation within reach.** Phones get a bottom bar and an expandable Explore
+  menu; desktop keeps the sidebar. Both work without JavaScript.
 - **Search when you need it.** The full-text index loads on the first query.
 - **CTF writeups alongside the notes.** Techniques, challenges, and walkthroughs
-  live here rather than in a separate writeup repository.
+  live under `project/ctf/`, alongside the rest of the garden.
 - **A small browser runtime.** Plain CSS, JavaScript, and Canvas. No React,
   database workers, or WASM in the published site.
 
-![Graph view screenshot placeholder](docs/images/graph.png)
+![Graph view](docs/images/graph.png)
 
 ## The size difference
 

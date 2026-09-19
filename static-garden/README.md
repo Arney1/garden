@@ -69,6 +69,14 @@ Page URLs include a UUID suffix to avoid slug collisions. Renaming a page change
 its slug; legacy UUID hash bookmarks still resolve. Reading, all-pages browsing,
 and collapsing blocks work without JavaScript. Search and the graph require it.
 
+On phones, a bottom navigation bar provides Home, Pages, Search, Graph, and an
+expandable Explore menu. The menu works without JavaScript. Graph touch targets
+are larger than mouse targets; tapping selects a page and shows an Open page link
+inside the graph. Dragging and pinch-to-zoom remain available.
+
+`site.json` controls the collection links in both the desktop sidebar and the
+mobile Explore menu. Links appear only when their targets exist in the public export.
+
 ## Security and attachments
 
 Raw HTML is disabled in Markdown. Graph text is not evaluated as code, and link
