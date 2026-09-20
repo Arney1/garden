@@ -21,3 +21,7 @@
   input[type=search]{font-size:16px}
 }
 @media print{.mobile-nav{display:none}body{padding-bottom:0}}
+
+.video-embed{margin:12px 0}
+.video-embed iframe{display:block;width:100%;height:auto;aspect-ratio:16/9;min-height:200px;border:0;border-radius:8px;background:#111}
+.video-embed figcaption{margin-top:6px;font-size:12px}

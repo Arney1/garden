@@ -63,6 +63,7 @@ manual operation; a referenced file larger than Pages' 25 MiB limit fails the bu
 | Search | Full-text JSON index fetched on the first query |
 | Old `#/page/` bookmarks | Small script resolves exported names and UUIDs to static routes |
 | Images, audio, video, PDFs | Referenced files copied; lazy images and media with `preload="none"` |
+| YouTube `{{video URL}}` blocks | Responsive, lazy-loaded player with a Watch on YouTube link |
 | Other attachments | Downloads with original filenames offered by the links |
 
 Page URLs include a UUID suffix to avoid slug collisions. Renaming a page changes
@@ -86,7 +87,9 @@ time with `trust: false`. Search and graph labels use DOM text nodes.
 The generated `_headers` supplies a Content Security Policy with no inline script
 or eval allowance, blocks framing and object embeds, and sets `nosniff` and a
 referrer policy. Scripts, styles, and fetched data must come from the site itself;
-external images and audio/video must use HTTPS.
+external images and audio/video must use HTTPS. Frames are allowed only from
+`https://www.youtube-nocookie.com` for the generated YouTube players. Raw HTML
+and arbitrary iframe embeds remain disabled.
 
 Local attachments have two destinations:
 
@@ -112,6 +115,21 @@ Only referenced local assets are copied, and the build reads only the public
 export. It never opens the private Logseq database. This is not a secret scanner:
 exported text, property labels, attachments, search data, and Git history can still
 contain information that was published accidentally.
+
+## YouTube videos
+
+A standalone Logseq video block renders as an embedded player:
+
+```text
+{{video https://youtu.be/0-zDFLbWK1Q}}
+```
+
+YouTube watch, short, Shorts, live, and embed URLs are supported, including `t=`
+or `start=` timestamps. A Markdown link inside the macro also works. Players use
+YouTube's privacy-enhanced domain, load lazily, and do not autoplay. The player
+contacts YouTube when it loads; privacy-enhanced mode does not mean no external
+requests. Each embed includes a normal YouTube link for videos with playback or
+embedding restrictions. Unknown providers and invalid URLs stay readable source.
 
 ## Format limits
 

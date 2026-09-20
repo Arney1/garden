@@ -4,14 +4,14 @@ import argparse
 from collections import defaultdict
 from datetime import datetime, timezone
 from hashlib import sha256
-from html import escape
+from html import escape, unescape
 import json
 from pathlib import Path
 import re
 import shutil
 import subprocess
 import tempfile
-from urllib.parse import quote, unquote, urlsplit
+from urllib.parse import parse_qs, quote, unquote, urlsplit
 
 from markdown_it import MarkdownIt
 from mdit_py_plugins.dollarmath import dollarmath_plugin
@@ -29,7 +29,7 @@ REF = re.compile(r'\[\[([^\]]+)\]\]|\(\(([^)]+)\)\)')
 INLINE_ASSETS = {'.png', '.jpg', '.jpeg', '.webp', '.gif', '.avif', '.ico',
                  '.mp3', '.ogg', '.wav', '.m4a', '.flac', '.mp4', '.webm', '.mov', '.pdf'}
 HEADERS = """/*
-  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' https:; font-src 'self'; connect-src 'self'; media-src 'self' https:; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' https:; font-src 'self'; connect-src 'self'; media-src 'self' https:; frame-src https://www.youtube-nocookie.com; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
@@ -68,6 +68,53 @@ def download_attribute(url):
 
 def values(value):
     return value if isinstance(value, list) else ([] if value is None else [value])
+
+
+def video_html(text):
+    """Render standalone YouTube macros from validated IDs, never arbitrary HTML."""
+    macro = re.fullmatch(r'\s*\{\{video\s+(.+?)\}\}\s*', text)
+    if not macro:
+        return None
+    raw = macro[1].strip()
+    # Logseq accepts plain URLs; also accept a Markdown link as the argument.
+    markdown_link = re.fullmatch(r'\[[^\]\n]*\]\(([^\s()]+)\)', raw)
+    if markdown_link:
+        raw = markdown_link[1]
+    elif raw.startswith('<') and raw.endswith('>'):
+        raw = raw[1:-1]
+    try:
+        parts = urlsplit(unescape(raw))
+    except ValueError:
+        return None
+    hosts = {'youtube.com', 'www.youtube.com', 'm.youtube.com', 'music.youtube.com',
+             'youtube-nocookie.com', 'www.youtube-nocookie.com', 'youtu.be', 'www.youtu.be'}
+    if parts.scheme not in ('http', 'https') or parts.netloc.lower() not in hosts:
+        return None
+    query = parse_qs(parts.query)
+    if parts.netloc.lower() in ('youtu.be', 'www.youtu.be'):
+        video_id = parts.path.lstrip('/')
+    elif parts.path == '/watch':
+        video_id = query.get('v', [''])[0]
+    else:
+        path = re.fullmatch(r'/(?:embed|shorts|live)/([A-Za-z0-9_-]{11})/?', parts.path)
+        video_id = path[1] if path else ''
+    if not re.fullmatch(r'[A-Za-z0-9_-]{11}', video_id):
+        return None
+    stamp = query.get('start', query.get('t', parse_qs(parts.fragment).get('t', [''])))[0]
+    time = re.fullmatch(r'(?:(\d{1,6})h)?(?:(\d{1,6})m)?(?:(\d{1,6})s)?', stamp)
+    start = 0
+    if re.fullmatch(r'\d{1,8}', stamp):
+        start = int(stamp)
+    elif time:
+        start = sum(int(n or 0) * multiplier for n, multiplier in zip(time.groups(), (3600, 60, 1)))
+    start = min(start, 2147483647)
+    src = f'https://www.youtube-nocookie.com/embed/{video_id}?playsinline=1' + (f'&start={start}' if start else '')
+    watch = f'https://www.youtube.com/watch?v={video_id}' + (f'&t={start}s' if start else '')
+    return (f'<figure class="video-embed"><iframe src="{escape(src, quote=True)}" '
+            'title="YouTube video player" width="560" height="315" loading="lazy" '
+            'referrerpolicy="strict-origin-when-cross-origin" '
+            'allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>'
+            f'<figcaption><a href="{escape(watch, quote=True)}">Watch on YouTube ↗</a></figcaption></figure>')
 
 
 def read_entities(db):
@@ -347,9 +394,10 @@ class Garden:
         n = self.entities[eid]
         self.rendered_ids.add(eid)
         text = n.get('block/title', '')
-        if '{{' in text or re.search(r'^#\+BEGIN_(?:QUERY|SRC)', text, re.I | re.M):
-            self.warnings.add(f'Macro/query retained as source: {n["block/uuid"]}')
         display = n.get('logseq.property.node/display-type')
+        video = video_html(text) if display not in ('code', 'math') and 'logseq.property.asset/type' not in n else None
+        if video is None and ('{{' in text or re.search(r'^#\+BEGIN_(?:QUERY|SRC)', text, re.I | re.M)):
+            self.warnings.add(f'Macro/query retained as source: {n["block/uuid"]}')
         if 'logseq.property.asset/type' in n:
             body = self.asset_html(eid)
         elif display == 'code':
@@ -357,9 +405,9 @@ class Garden:
         elif display == 'math':
             body = '<div class="math-block">' + self.math_html(text, {'display_mode': True}) + '</div>'
         else:
-            body = self.md.render(text)
+            body = video if video is not None else self.md.render(text)
             heading = n.get('logseq.property/heading')
-            if heading:
+            if heading and video is None:
                 level = max(2, min(6, int(heading)))
                 body = f'<h{level}>' + self.md.renderInline(text) + f'</h{level}>'
             if display == 'quote':
