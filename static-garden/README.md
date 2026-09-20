@@ -137,8 +137,9 @@ The Transit reader supports the types used by this Logseq DB export and rejects
 unknown types. It does not support the older Markdown-graph export format.
 
 Plugins, editing, flashcard scheduling, arbitrary Hiccup/HTML, and live Datalog
-queries are outside the renderer. Unsupported query or macro syntax remains
-readable source and produces a warning. Missing references and attachments,
+queries are outside the renderer. Page and block embeds (`{{embed}}`) render
+inline; other unsupported query or macro syntax remains readable source and
+produces a warning. Missing references and attachments,
 unsupported links, and equation errors are also reported. Missing private targets
 are never fetched; an exported property value may still expose its label without
 a corresponding public page body.
