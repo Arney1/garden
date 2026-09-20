@@ -24,6 +24,12 @@ from transit_reader import load_export
 HERE = Path(__file__).resolve().parent
 UUID = re.compile(r'^[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}$')
 REF = re.compile(r'\[\[([^\]]+)\]\]|\(\(([^)]+)\)\)')
+VIDEO_MACRO = re.compile(r'\{\{\s*(video|youtube|vimeo)\s+([^{}]+?)\s*\}\}', re.I)
+# Only these hosts are ever placed into an iframe src, and only paired with an
+# ID extracted here — the graph's raw URL never reaches the iframe.
+YOUTUBE_URL = re.compile(r'^https?://(?:www\.)?(?:youtube(?:-nocookie)?\.com/(?:watch\?(?:[^#]*&)?v=|embed/)|youtu\.be/)([A-Za-z0-9_-]{6,})', re.I)
+VIMEO_URL = re.compile(r'^https?://(?:www\.)?(?:player\.)?vimeo\.com/(?:video/)?(\d+)', re.I)
+VIDEO_FILE = re.compile(r'\.(mp4|webm|ogg|mov)(?:[?#].*)?$', re.I)
 # Only these attachment formats can be opened on the site's origin. Everything
 # else gets an inert extension and download-only response headers.
 INLINE_ASSETS = {'.png', '.jpg', '.jpeg', '.webp', '.gif', '.avif', '.ico',
@@ -282,9 +288,31 @@ class Garden:
         token = tokens[idx]
         src = self.link_url(token.attrGet('src') or '')
         alt = token.content
+        video = self.video_embed_html(src, alt)
+        if video is not None:
+            return video
         if download_name(src) is not None:
             return f'<a class="attachment" href="{escape(src, quote=True)}"{download_attribute(src)}>{escape(alt or download_name(src))}</a>'
         return f'<img src="{escape(src, quote=True)}" alt="{escape(alt, quote=True)}" loading="lazy" decoding="async">'
+
+    def video_embed_html(self, url, title=''):
+        # Only an allow-listed host plus an ID extracted from it ever reaches
+        # the iframe src — the graph's raw URL itself is never trusted there.
+        title = title or 'Video'
+        m = YOUTUBE_URL.match(url)
+        if m:
+            src = 'https://www.youtube-nocookie.com/embed/' + quote(m[1], safe='')
+            return (f'<figure class="video-embed"><iframe src="{src}" title="{escape(title, quote=True)}" '
+                    f'loading="lazy" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></figure>')
+        m = VIMEO_URL.match(url)
+        if m:
+            src = 'https://player.vimeo.com/video/' + quote(m[1], safe='')
+            return (f'<figure class="video-embed"><iframe src="{src}" title="{escape(title, quote=True)}" '
+                    f'loading="lazy" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></figure>')
+        if VIDEO_FILE.search(url):
+            return (f'<figure class="video-embed"><video controls preload="metadata" '
+                    f'src="{escape(url, quote=True)}"></video></figure>')
+        return None
 
     def code(self, text, lang='', attrs=''):
         try:
@@ -347,6 +375,18 @@ class Garden:
         n = self.entities[eid]
         self.rendered_ids.add(eid)
         text = n.get('block/title', '')
+        video_replacements = {}
+        def extract_video_macro(m):
+            arg = m[2].strip()
+            resolved = self.link_url(arg)
+            html = self.video_embed_html(resolved)
+            if html is None:
+                self.warnings.add(f'Unrecognized video source: {arg}')
+                html = f'<a href="{escape(resolved, quote=True)}">{escape(arg)}</a>'
+            placeholder = f'GARDENVIDEOPLACEHOLDER{len(video_replacements)}ENDPLACEHOLDER'
+            video_replacements[placeholder] = html
+            return placeholder
+        text = VIDEO_MACRO.sub(extract_video_macro, text)
         if '{{' in text or re.search(r'^#\+BEGIN_(?:QUERY|SRC)', text, re.I | re.M):
             self.warnings.add(f'Macro/query retained as source: {n["block/uuid"]}')
         display = n.get('logseq.property.node/display-type')
@@ -364,6 +404,8 @@ class Garden:
                 body = f'<h{level}>' + self.md.renderInline(text) + f'</h{level}>'
             if display == 'quote':
                 body = '<blockquote>' + body + '</blockquote>'
+        for placeholder, html in video_replacements.items():
+            body = body.replace(placeholder, html)
         link = n.get('block/link')
         if link is not None and not text.strip():
             body = self.embed(link, (*ancestors, eid))

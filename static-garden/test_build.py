@@ -138,6 +138,44 @@ class PublishingTests(unittest.TestCase):
         self.assertEqual(len(links), len(data['links']))
         self.assertEqual(next(n for n in data['nodes'] if n['title'] == 'Home')['kind'], 'home')
 
+    def test_image_syntax_youtube_url_renders_as_embed(self):
+        content = self.g.md.render('![](https://www.youtube.com/embed/inKgugNboLI)')
+        self.assertIn('class="video-embed"', content)
+        self.assertIn('<iframe', content)
+        self.assertIn('src="https://www.youtube-nocookie.com/embed/inKgugNboLI"', content)
+        self.assertNotIn('<img', content)
+        self.assertNotIn('youtube.com/embed', content)
+
+    def test_video_macro_youtube_watch_url_renders_as_embed(self):
+        self.nodes[5]['block/title'] = '{{video https://www.youtube.com/watch?v=inKgugNboLI}}'
+        g = Garden(self.nodes, self.root, self.config)
+        content = g.block(5)
+        self.assertIn('class="video-embed"', content)
+        self.assertIn('src="https://www.youtube-nocookie.com/embed/inKgugNboLI"', content)
+        self.assertNotIn('Macro/query retained as source', ' '.join(g.warnings))
+
+    def test_vimeo_macro_renders_as_embed(self):
+        self.nodes[5]['block/title'] = '{{vimeo https://vimeo.com/76979871}}'
+        g = Garden(self.nodes, self.root, self.config)
+        content = g.block(5)
+        self.assertIn('class="video-embed"', content)
+        self.assertIn('src="https://player.vimeo.com/video/76979871"', content)
+
+    def test_direct_video_file_url_renders_as_video_tag(self):
+        self.nodes[5]['block/title'] = '{{video https://example.com/clip.mp4}}'
+        g = Garden(self.nodes, self.root, self.config)
+        content = g.block(5)
+        self.assertIn('class="video-embed"', content)
+        self.assertIn('<video controls preload="metadata" src="https://example.com/clip.mp4">', content)
+
+    def test_unrecognized_video_source_falls_back_to_a_warned_link(self):
+        self.nodes[5]['block/title'] = '{{video https://evil.example/x}}'
+        g = Garden(self.nodes, self.root, self.config)
+        content = g.block(5)
+        self.assertNotIn('<iframe', content)
+        self.assertIn('<a href="https://evil.example/x">', content)
+        self.assertTrue(any('Unrecognized video source' in w for w in g.warnings))
+
     def test_output_cannot_replace_source_or_unrelated_files(self):
         with self.assertRaises(ValueError):
             build(self.root, self.root, self.config)
