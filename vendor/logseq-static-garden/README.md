@@ -1,10 +1,12 @@
+<p align="center"><img src="static-garden/branding/logo.svg" width="80" height="80" alt="garden logo"></p>
+
 # logseq-static-garden
 
 Turn a Logseq public export into a website that opens like a website.
 
 Every note is rendered to HTML before deployment. Visitors get outlines, linked
 pages, search, and an interactive graph without loading Logseq, SQLite, or WASM.
-Built for **Logseq 2.0.1 DB graphs → Export public pages**.
+Built for **Logseq 2.0.1 DB graphs -> Export public pages**.
 
 [Live example: Arney's garden](https://arney-garden.pages.dev) · [Exporter guide](static-garden/README.md) · [Contributing](CONTRIBUTING.md)
 
@@ -60,12 +62,12 @@ served at the domain root, not a repository subpath.
 For an automated build, keep a pinned copy of this tool in your site's repository
 or have CI check out an exact commit. Avoid building against a moving branch if
 you want updates to be deliberate. [Arney's garden](https://github.com/Arney1/garden)
-uses a checked-in snapshot and keeps its usual export → commit → push workflow.
+uses a checked-in snapshot and keeps its usual export -> commit -> push workflow.
 
 ## How it works
 
 ```text
-public export → Transit decoder → HTML + CSS + JS → static hosting
+public export -> Transit decoder -> HTML + CSS + JS -> static hosting
 ```
 
 Python renders content, Markdown, and highlighted code. Node.js runs bundled KaTeX
