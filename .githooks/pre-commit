@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -euo pipefail
 repo_root="$(git rev-parse --show-toplevel)"
-exec python3 "$repo_root/static-garden/check-staged.py" "$repo_root"
+exec python3 "$repo_root/tools/check-staged.py" "$repo_root"

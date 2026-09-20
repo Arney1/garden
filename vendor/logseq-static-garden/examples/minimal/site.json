@@ -1,0 +1,11 @@
+{
+  "title": "Example garden",
+  "home_page": "Home",
+  "description": "A small garden of connected notes.",
+  "url": "https://example.com",
+  "language": "en",
+  "navigation": [
+    "Notes",
+    "Projects"
+  ]
+}

@@ -132,6 +132,10 @@ def read_entities(db):
 class Garden:
     def __init__(self, entities, source, config):
         self.entities, self.source, self.config = entities, source, config
+        self.branding = source / 'branding' if (source / 'branding').exists() else HERE / 'branding'
+        for name in ('logo.svg', 'logo.png'):
+            if not (self.branding / name).is_file():
+                raise ValueError(f'Branding file missing: {self.branding / name}')
         self.warnings = set()
         self.assets = set()
         self.math = {}
@@ -482,7 +486,7 @@ class Garden:
         desc = escape(description or self.config['description'], quote=True)
         subtitle = '<p class="eyebrow">A PERSONAL CORNER OF THE INTERNET</p>' if home else '<p class="eyebrow"><a href="/pages/">THE GARDEN</a></p>'
         meta = f'<p class="page-meta">Updated {escape(date)}</p>' if date else ''
-        logo_hash = sha256((HERE / 'branding/logo.svg').read_bytes()).hexdigest()[:12]
+        logo_hash = sha256((self.branding / 'logo.svg').read_bytes()).hexdigest()[:12]
         document_title = site + ' · Portfolio & Garden' if home else escape(title) + ' · ' + site
         icons = {
             'Home': '<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/>',
@@ -516,7 +520,7 @@ class Garden:
 def render_math(garden):
     if not garden.math:
         return []
-    katex = garden.source / 'static/js/katex.min.js'
+    katex = HERE.parent / 'vendor/katex/katex.min.js'
     if not katex.is_file():
         raise ValueError(f'KaTeX build renderer missing: {katex}')
     script = """const fs = require('fs'); const k = require(process.argv[1]);
@@ -539,13 +543,13 @@ process.stdout.write(JSON.stringify(input.map(([s, display]) => {
 
 def build(source, output, config):
     source, output = source.resolve(), output.resolve()
-    if output == source or source.is_relative_to(output):
+    if output == source or source.is_relative_to(output) or HERE.parent.is_relative_to(output):
         raise ValueError('Output must not replace or contain the original export')
     if output.exists() and any(output.iterdir()) and not (output / '.static-garden-build').is_file():
         raise ValueError('Refusing to replace a non-generated output directory')
     project = HERE.parent
     required_notices = ['LICENSE.md', 'THIRD_PARTY_NOTICES.md', 'licenses/MIT.txt',
-                        'licenses/Logseq-AGPL-3.0.txt', 'licenses/pygments/LICENSE.txt',
+                        'licenses/pygments/LICENSE.txt',
                         'licenses/katex/LICENSE.txt', 'licenses/sources.json']
     for notice in required_notices:
         if not (project / notice).is_file():
@@ -554,6 +558,22 @@ def build(source, output, config):
                      for p in (project / 'licenses').rglob('*') if p.is_file()}
     license_files['licenses/PROJECT-LICENSE.md'] = (project / 'LICENSE.md').read_bytes()
     license_files['licenses/THIRD_PARTY_NOTICES.md'] = (project / 'THIRD_PARTY_NOTICES.md').read_bytes()
+    # Preserve the publisher's notices alongside the exporter notices.
+    if source != project:
+        for path in (source / 'licenses').rglob('*'):
+            if path.is_file():
+                name = path.relative_to(source).as_posix()
+                if name not in license_files:
+                    license_files[name] = path.read_bytes()
+                elif name == 'licenses/sources.json':
+                    records = json.loads(license_files[name])
+                    for record in json.loads(path.read_text()):
+                        if record not in records:
+                            records.append(record)
+                    license_files[name] = (json.dumps(records, indent=2) + '\n').encode()
+        for name, target in [('LICENSE.md', 'SITE-LICENSE.md'), ('THIRD_PARTY_NOTICES.md', 'SITE-NOTICES.md')]:
+            if (source / name).is_file():
+                license_files['licenses/' + target] = (source / name).read_bytes()
     entities = read_entities(load_export(source / 'index.html'))
     garden = Garden(entities, source, config)
     css = (HERE / 'garden.css').read_text() + '\n' + HtmlFormatter(style='native').get_style_defs('pre')
@@ -603,9 +623,9 @@ Code highlighting includes Pygments stylesheet output under the
 <a href="/licenses/pygments/LICENSE.txt">BSD 2-Clause license</a>.</p>
 <p>Notes, attachments, screenshots, and branding retain their own rights.
 This is an unofficial project built for Logseq.</p>
-<p>See the repository's <a href="https://github.com/Arney1/garden/blob/main/LICENSE.md">license scope</a>
-and <a href="https://github.com/Arney1/garden/blob/main/THIRD_PARTY_NOTICES.md">third-party notices and source links</a>.
-The notices below also cover build tools and the original Logseq export retained in the repository.</p>'''
+<p>See the repository's <a href="/licenses/PROJECT-LICENSE.md">license scope</a>
+and <a href="/licenses/THIRD_PARTY_NOTICES.md">third-party notices and source links</a>.
+Publisher notices, when supplied, are listed separately below.</p>'''
     credits += '<ul>' + ''.join(f'<li><a href="/{quote(name, safe="/")}">{escape(name.removeprefix("licenses/"))}</a></li>'
                                for name in sorted(license_files)) + '</ul>'
     documents['/licenses/'] = garden.shell('Licenses', credits, '/licenses/', css_url, js_url)
@@ -643,8 +663,8 @@ The notices below also cover build tools and the original Logseq export retained
                 target = dest / published_asset_path(asset)
                 target.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(origin, target)
-        icon = HERE / 'branding/logo.png'
-        logo = HERE / 'branding/logo.svg'
+        icon = garden.branding / 'logo.png'
+        logo = garden.branding / 'logo.svg'
         logo_hash = sha256(logo.read_bytes()).hexdigest()[:12]
         (dest / 'static/img').mkdir(parents=True)
         shutil.copy2(icon, dest / 'static/img/logo.png')
@@ -670,11 +690,14 @@ The notices below also cover build tools and the original Logseq export retained
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--source', type=Path, default=HERE.parent)
+    parser.add_argument('--source', type=Path, default=Path.cwd())
     parser.add_argument('--output', type=Path)
-    parser.add_argument('--config', type=Path, default=HERE / 'site.json')
+    parser.add_argument('--config', type=Path)
     args = parser.parse_args()
-    config = json.loads(args.config.read_text())
+    config_path = args.config or args.source / 'site.json'
+    if not config_path.is_file() and args.config is None:
+        config_path = HERE / 'site.json'
+    config = json.loads(config_path.read_text())
     build(args.source, args.output or args.source / 'dist', config)
 
 

@@ -6,50 +6,46 @@ There is no Logseq runtime or browser database in the output.
 
 ## Build and preview
 
-From the repository root:
+From the exporter repository:
 
 ```sh
-./build-static.sh
+./build-static.sh --source examples/minimal --output dist
 python3 -m http.server 8000 --directory dist
 ```
 
-Requirements: Python 3.10+ with venv support and Node.js. The wrapper creates
-`.venv-static/` and installs the pinned Python dependencies. Node runs the exported
-KaTeX bundle and the graph layout script; neither requires an npm install.
+The wrapper installs pinned Python dependencies into `.venv-static/`. Node.js runs
+bundled KaTeX and the graph layout script. No npm install is needed, and JavaScript
+from the source Logseq export is never executed.
 
 Once dependencies are installed, an offline build can run directly:
 
 ```sh
-.venv-static/bin/python static-garden/build.py
+.venv-static/bin/python static-garden/build.py --source /path/to/public-export
 ```
 
-The CLI also accepts `--source`, `--output`, and `--config` paths:
-
-```sh
-./build-static.sh --source /path/to/public-export --output /path/to/site
-```
+`--source` defaults to the current directory. `--output` defaults to `SOURCE/dist`.
+`--config` defaults to `SOURCE/site.json`, falling back to the generic exporter
+configuration. Paths are resolved from the current directory. A supplied `--config`
+that does not exist fails the build.
 
 The build uses a temporary directory, checks block coverage and attachment sizes,
-then replaces the generated output. It refuses to replace the source or an
-unrelated nonempty directory. `dist-report.json` records counts, sizes, and warnings
-beside the output, outside the deployed website.
+then replaces the generated output. It refuses to replace the source, the exporter,
+or an unrelated nonempty directory. `dist-report.json` records counts, sizes, and
+warnings beside the output, outside the deployed website.
 
-## Publishing and hooks
+## Publishing
 
-Cloudflare Pages uses **`./build-static.sh`** with output directory **`dist`** and
-framework preset **None**. The repository root is the build root. A normal update
-is a fresh public export, a commit, and a push; Pages runs the build automatically.
-Direct uploads must contain the contents of `dist/`.
+Publish only the generated directory. The raw export is a build input, not the
+site. Cloudflare Pages understands the generated `_headers`; other hosts need
+matching response-header configuration. No server or database is required.
 
-Install the local hook once per clone with `./install-hooks.sh`, after the first
-build has initialized the venv. The tracked `.githooks/pre-commit` validates an
-isolated copy of the **Git index**, including partially staged files and deletions.
-It does not install dependencies, modify the working tree, replace `dist/`, or
-stage files. Root README and screenshot changes skip validation; changes under
-`static-garden/` trigger it. An existing hook is backed up during installation.
+Keep your site's notes, configuration, logo, hosting setup, and Git hooks in its
+own repository. Pin the exporter to a version you have tested. An export should
+not overwrite the tool or change which version a deployment uses.
 
-`patch-index.py` is not part of this pipeline. Asset compression is a separate,
-manual operation; a referenced file larger than Pages' 25 MiB limit fails the build.
+The old `patch-index.py` step is unnecessary. Asset compression is separate from
+rendering; a referenced attachment larger than Cloudflare Pages' 25 MiB limit
+fails the build.
 
 ## Rendering
 
@@ -75,7 +71,7 @@ expandable Explore menu. The menu works without JavaScript. Graph touch targets
 are larger than mouse targets; tapping selects a page and shows an Open page link
 inside the graph. Dragging and pinch-to-zoom remain available.
 
-`site.json` controls the collection links in both the desktop sidebar and the
+The source directory’s `site.json` controls the collection links in both the desktop sidebar and the
 mobile Explore menu. Links appear only when their targets exist in the public export.
 
 ## Security and attachments
@@ -100,7 +96,7 @@ Local attachments have two destinations:
   `Content-Disposition: attachment` and an additional sandbox CSP. They cannot
   become executable pages on the garden's origin.
 
-The only local SVG served as an image is the trusted logo from `branding/`. Asset paths
+The only local SVG served as an image is the trusted logo from the source directory’s `branding/` (or the generic default). Asset paths
 and symlinks escaping the source's `assets/` directory fail the build. Attachment
 contents are not modified or scanned for malware; downloaded files remain untrusted.
 Old direct URLs to files moved into `/downloads/` change; generated note links
@@ -148,12 +144,11 @@ a corresponding public page body.
 
 | File | Purpose |
 | --- | --- |
-| `site.json` | Homepage, navigation, title, description, language, canonical URL |
+| `site.json` | Generic defaults; publishers normally supply `SOURCE/site.json` |
 | `build.py` / `transit_reader.py` | Decode the graph, render pages, copy attachments, emit headers |
 | `garden.css` / `garden.js` | Main layout, search, legacy bookmarks |
 | `graph-layout.cjs` / `graph.js` / `graph.css` | Graph layout and browser viewer |
-| `branding/logo.svg` / `logo.png` | Canonical site identity, preserved across Logseq exports |
-| `check-staged.py` | Validate a staged export during pre-commit |
+| `branding/logo.svg` / `logo.png` | Generic default logo; overridden by `SOURCE/branding/` |
 
 Branding is copied to the hashed SVG used in the sidebar, `static/img/logo.png`,
 and `favicon.png` in the output. Generated pages also include canonical URLs,
@@ -167,16 +162,15 @@ a sitemap, and a real `404.html` rather than an SPA fallback.
 
 Tests cover Transit decoding, rendering, page filtering, reference handling,
 attachment containment, script injection, download routing, generated security
-headers, and the hook's behavior with real isolated Git indices.
+headers, separate source directories, branding, and the fictional example build.
 
 ## License
 
-The original exporter, browser code, and build tools are [MIT licensed](../licenses/MIT.txt);
-see [LICENSE.md](../LICENSE.md) for the exact scope. The original Logseq export
-remains under its upstream terms. [Third-party notices](../THIRD_PARTY_NOTICES.md)
-include the source revision embedded in the export and the bundled license texts.
+The original exporter, browser code, generic logo, examples, and docs are
+[MIT licensed](../licenses/MIT.txt). [Third-party notices](../THIRD_PARTY_NOTICES.md)
+cover bundled KaTeX and build dependencies. Keep those files with the exporter.
 
-The build copies `licenses/`, the license scope, and third-party notices into
-`dist/licenses/`, linked from each page's footer. Keep these files with the
-exporter when copying it to another project. The hook validates licensing changes
-as build inputs. Garden content and branding are not covered by the MIT grant.
+Each generated site includes the exporter notices at `/licenses/`. If the source
+has `LICENSE.md`, `THIRD_PARTY_NOTICES.md`, or a `licenses/` directory, those notices
+are also retained. Publisher documents appear as `SITE-LICENSE.md` and
+`SITE-NOTICES.md`. Exporting content does not grant a new license to that content.

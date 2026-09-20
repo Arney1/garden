@@ -1,11 +1,11 @@
-<p align="center"><img src="static-garden/branding/logo.svg" width="80" height="80" alt="garden logo"></p>
+<p align="center"><img src="branding/logo.svg" width="80" height="80" alt="garden logo"></p>
 
 # garden
 
 My portfolio and notes on security, software, music, and whatever else I get into.
 Written in Logseq, published as a static website.
 
-**[Visit the garden](https://arney-garden.pages.dev)** · **[Explore the graph](https://arney-garden.pages.dev/graph/)** · **[Exporter docs](static-garden/README.md)**
+**[Visit the garden](https://arney-garden.pages.dev)** · **[Explore the graph](https://arney-garden.pages.dev/graph/)** · **[Exporter docs](vendor/logseq-static-garden/static-garden/README.md)**
 
 ![Garden homepage](docs/images/homepage.png)
 
@@ -15,7 +15,7 @@ I love writing in Logseq: outlines, linked notes, and a graph I can get lost in.
 Its public export brought the whole app along, though. Reading my homepage meant
 waiting for a large JavaScript bundle and a browser database to start.
 
-This repo includes an exporter that does that work during the build. Every note
+The separate `logseq-static-garden` exporter does that work during the build. Every note
 has its own HTML page. The site keeps the sidebar and outlines, with a custom “a”
 mark and a layout that works as both a portfolio and a garden.
 
@@ -78,19 +78,30 @@ There is no manual `patch-index.py` step. The hook validates files without
 rewriting or auto-staging them. Only `dist/` is the website; the repository root
 contains the original export and build tools.
 
-## Under the hood
+## Two projects, two jobs
 
-```text
-Logseq public export -> Python + Node.js -> HTML / CSS / JS -> Cloudflare Pages
-```
+This repository is **my personal website**. The reusable renderer lives in a
+separate project, **logseq-static-garden**, with fictional sample content and its
+own tests. Please send renderer improvements there once that repository is
+published. Personal notes and site-specific changes belong here.
 
-Python decodes the exported graph and renders the pages. Markdown-it-py handles
-Markdown, Pygments highlights code, and KaTeX produces MathML during the build.
-Node.js also computes the graph layout. Visitors get the results as static files.
+| Path | What it contains |
+| --- | --- |
+| `index.html`, `assets/`, `static/` | Public Logseq export and its original runtime |
+| `site.json` | My homepage, navigation, description, and canonical URL |
+| `branding/` | My site logo, kept outside the raw export |
+| `vendor/logseq-static-garden/` | Exact exporter snapshot used by builds |
+| `exporter.lock.json` | Exporter commit and file checksums |
+| `tools/`, `.githooks/` | Snapshot updates and staged-build validation |
+| `dist/` | Generated website; ignored by Git |
 
-[Site settings](static-garden/site.json) control navigation, the homepage, and the
-canonical URL. The [exporter guide](static-garden/README.md) covers the format,
-attachment policy, tests, and known limits.
+A build uses the checked-in snapshot. It does not fetch an exporter branch or
+require the separate checkout on your machine. The build and pre-commit hook both
+check the snapshot against the lock file.
+
+For renderer changes and deliberate upgrades, see [Updating the exporter](docs/exporter.md).
+The [exporter guide](vendor/logseq-static-garden/static-garden/README.md) describes
+rendering support, attachment handling, and limitations.
 
 The deployed site uses a strict Content Security Policy and download-only handling
 for non-media attachments. Content and attachments in this repository are public;
@@ -98,7 +109,7 @@ the exporter does not scan them for secrets.
 
 ## License
 
-The original static exporter and its build tools are [MIT licensed](licenses/MIT.txt).
+The static exporter and build tools are [MIT licensed](licenses/MIT.txt).
 Logseq's bundled runtime retains AGPLv3 terms, and third-party libraries and fonts
 retain their own licenses. This is an unofficial project.
 

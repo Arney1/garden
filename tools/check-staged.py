@@ -13,7 +13,7 @@ def git(root, *args):
 
 
 def relevant(name):
-    return name in ('index.html', 'build-static.sh', 'LICENSE.md', 'THIRD_PARTY_NOTICES.md') or name.startswith(('assets/', 'static-garden/', 'static/js/katex.min.js', 'licenses/'))
+    return name in ('index.html', 'site.json', 'exporter.lock.json', 'build-static.sh', 'LICENSE.md', 'THIRD_PARTY_NOTICES.md') or name.startswith(('assets/', 'branding/', 'vendor/logseq-static-garden/', 'tools/', 'licenses/'))
 
 
 def check(root):
@@ -31,13 +31,17 @@ def check(root):
         # checkout-index reads the index, including partially staged files and deletions.
         # It never substitutes unstaged working-tree versions.
         git(root, 'checkout-index', '--all', '--prefix=' + str(snapshot) + os.sep)
-        required = ['index.html', 'build-static.sh', 'static-garden/build.py', 'static-garden/requirements.txt',
-                    'static-garden/branding/logo.png', 'static-garden/branding/logo.svg', 'static/js/katex.min.js']
+        required = ['index.html', 'build-static.sh', 'vendor/logseq-static-garden/static-garden/build.py',
+                    'vendor/logseq-static-garden/static-garden/requirements.txt',
+                    'site.json', 'branding/logo.png', 'branding/logo.svg', 'exporter.lock.json', 'tools/exporter.py']
         missing = [path for path in required if not (snapshot / path).is_file()]
         if missing:
             print('Static garden: required files are missing from the staged commit:\n  ' + '\n  '.join(missing), file=sys.stderr)
             print('Stage the complete converter and public export before committing.', file=sys.stderr)
             return 1
+        pinned = subprocess.run([sys.executable, str(snapshot / 'tools/exporter.py'), 'verify', '--root', str(snapshot)])
+        if pinned.returncode:
+            return pinned.returncode
         # Dependency changes must be installed deliberately, never downloaded by a hook.
         verify = '''import importlib.metadata, pathlib, sys
 for line in pathlib.Path(sys.argv[1]).read_text().splitlines():
@@ -49,10 +53,10 @@ for line in pathlib.Path(sys.argv[1]).read_text().splitlines():
     if actual != expected:
         sys.exit(f'{name}: need {expected}, found {actual}. Run ./build-static.sh before committing.')
 '''
-        deps = subprocess.run([str(python), '-c', verify, str(snapshot / 'static-garden/requirements.txt')])
+        deps = subprocess.run([str(python), '-c', verify, str(snapshot / 'vendor/logseq-static-garden/static-garden/requirements.txt')])
         if deps.returncode:
             return deps.returncode
-        result = subprocess.run([str(python), str(snapshot / 'static-garden/build.py'),
+        result = subprocess.run([str(python), str(snapshot / 'vendor/logseq-static-garden/static-garden/build.py'),
                                  '--source', str(snapshot), '--output', str(Path(temporary) / 'dist')], cwd=snapshot)
         if result.returncode:
             print('Static garden: the staged version does not build. Fix and stage the changes, then retry.', file=sys.stderr)

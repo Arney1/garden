@@ -1,6 +1,8 @@
 # Third-party notices
 
-The garden exporter is independently implemented. Logseq provides the source
+The reusable exporter is maintained separately and pinned under
+`vendor/logseq-static-garden/`; its own notices and contributor credits travel
+with that snapshot. The garden exporter is independently implemented. Logseq provides the source
 export format and inspired the outline interface. This repository also retains
 the original export runtime and its dependencies; the MIT license for the new
 exporter does not replace their licenses.
@@ -38,7 +40,7 @@ match, and a separately modified runtime also needs its modified source provided
 | mdit-py-plugins 0.6.1 | Markdown extensions | [MIT](licenses/mdit-py-plugins/LICENSE.txt); additional plugin notices are retained in that directory |
 | mdurl 0.1.2 | URL parsing dependency | [MIT](licenses/mdurl/LICENSE.txt) |
 | Pygments 2.21.0 | Highlighted code and generated stylesheet rules | [BSD-2-Clause](licenses/pygments/LICENSE.txt), [authors](licenses/pygments/AUTHORS.txt) |
-| KaTeX 0.16.45 | Build-time MathML rendering; also present in the raw export | [MIT](licenses/katex/LICENSE.txt) |
+| KaTeX 0.16.45 | Build-time MathML rendering from the pinned exporter bundle; also present in the raw export | [MIT](licenses/katex/LICENSE.txt) |
 
 The generated site includes the exporter's original browser code, rendered
 content, and Pygments stylesheet output. It does not ship KaTeX, Python packages,

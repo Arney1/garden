@@ -1,0 +1,94 @@
+[
+  {
+    "file": "licenses/katex/LICENSE.txt",
+    "source": "https://registry.npmjs.org/katex/-/katex-0.16.45.tgz",
+    "package": "katex",
+    "license_source_version": "0.16.45",
+    "archive_sha1": "ba60d39c54746b6b8d39ce0e7f6eace07143149c",
+    "sha256": "766ccc1f306c885aa45542a9846bbd0a505b27a0374f146778171c2254ce18e3"
+  },
+  {
+    "file": "licenses/markdown-it-py/LICENSE.txt",
+    "source": "https://pypi.org/project/markdown-it-py/4.2.0/",
+    "package": "markdown-it-py",
+    "license_source_version": "4.2.0",
+    "sha256": "4a2260d6e2cd0f5a151a1e86dbfe7d3ed552b1e2beabf9941c1ba5c49cbce484"
+  },
+  {
+    "file": "licenses/markdown-it-py/LICENSE.markdown-it.txt",
+    "source": "https://pypi.org/project/markdown-it-py/4.2.0/",
+    "package": "markdown-it-py",
+    "license_source_version": "4.2.0",
+    "sha256": "792c48c5a849a15fdf9e37e8bcf9e6d1dd13b32b46c642a748a0a46a9919d473"
+  },
+  {
+    "file": "licenses/mdit-py-plugins/LICENSE.txt",
+    "source": "https://pypi.org/project/mdit-py-plugins/0.6.1/",
+    "package": "mdit-py-plugins",
+    "license_source_version": "0.6.1",
+    "sha256": "4a2260d6e2cd0f5a151a1e86dbfe7d3ed552b1e2beabf9941c1ba5c49cbce484"
+  },
+  {
+    "file": "licenses/mdit-py-plugins/mdit_py_plugins--admon--LICENSE.txt",
+    "source": "https://pypi.org/project/mdit-py-plugins/0.6.1/",
+    "package": "mdit-py-plugins",
+    "license_source_version": "0.6.1",
+    "sha256": "699355a44cb248631a4cde542029b593b7e6663823b0518338e85fd65360bac3"
+  },
+  {
+    "file": "licenses/mdit-py-plugins/mdit_py_plugins--container--LICENSE.txt",
+    "source": "https://pypi.org/project/mdit-py-plugins/0.6.1/",
+    "package": "mdit-py-plugins",
+    "license_source_version": "0.6.1",
+    "sha256": "c91339910d300f163edcaddbfb3909f1cffae19a496b7fe3935a9a4073dc305a"
+  },
+  {
+    "file": "licenses/mdit-py-plugins/mdit_py_plugins--deflist--LICENSE.txt",
+    "source": "https://pypi.org/project/mdit-py-plugins/0.6.1/",
+    "package": "mdit-py-plugins",
+    "license_source_version": "0.6.1",
+    "sha256": "81d61236a5f25294b2dad0c866d4ad6a40b865148b28df9a71f49ba771a6c54b"
+  },
+  {
+    "file": "licenses/mdit-py-plugins/mdit_py_plugins--footnote--LICENSE.txt",
+    "source": "https://pypi.org/project/mdit-py-plugins/0.6.1/",
+    "package": "mdit-py-plugins",
+    "license_source_version": "0.6.1",
+    "sha256": "81d61236a5f25294b2dad0c866d4ad6a40b865148b28df9a71f49ba771a6c54b"
+  },
+  {
+    "file": "licenses/mdit-py-plugins/mdit_py_plugins--front_matter--LICENSE.txt",
+    "source": "https://pypi.org/project/mdit-py-plugins/0.6.1/",
+    "package": "mdit-py-plugins",
+    "license_source_version": "0.6.1",
+    "sha256": "9e1bc1fafae020b5c33cc9cb745c707a5addf109cd814f0dac2d41424b83554a"
+  },
+  {
+    "file": "licenses/mdit-py-plugins/mdit_py_plugins--texmath--LICENSE.txt",
+    "source": "https://pypi.org/project/mdit-py-plugins/0.6.1/",
+    "package": "mdit-py-plugins",
+    "license_source_version": "0.6.1",
+    "sha256": "012a56cf9e23a2917336178cca417ab4c88fc64ad7086d621d6a8b956593629f"
+  },
+  {
+    "file": "licenses/pygments/AUTHORS.txt",
+    "source": "https://pypi.org/project/Pygments/2.21.0/",
+    "package": "Pygments",
+    "license_source_version": "2.21.0",
+    "sha256": "71a83872ad82f57be692cf827e048e2cd51d45169cfa1ea3f28706d97a872c0f"
+  },
+  {
+    "file": "licenses/pygments/LICENSE.txt",
+    "source": "https://pypi.org/project/Pygments/2.21.0/",
+    "package": "Pygments",
+    "license_source_version": "2.21.0",
+    "sha256": "a9d66f1d526df02e29dce73436d34e56e8632f46c275bbdffc70569e882f9f17"
+  },
+  {
+    "file": "licenses/mdurl/LICENSE.txt",
+    "source": "https://pypi.org/project/mdurl/0.1.2/",
+    "package": "mdurl",
+    "license_source_version": "0.1.2",
+    "sha256": "7c605df6e28667a9603118e98274f64a49ce3eed0d26fccce9534a345e0ef955"
+  }
+]
