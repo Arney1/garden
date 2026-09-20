@@ -364,6 +364,9 @@ class Garden:
                 body = f'<h{level}>' + self.md.renderInline(text) + f'</h{level}>'
             if display == 'quote':
                 body = '<blockquote>' + body + '</blockquote>'
+        link = n.get('block/link')
+        if link is not None and not text.strip():
+            body = self.embed(link, (*ancestors, eid))
         if n.get('logseq.property/query'):
             self.warnings.add(f'Dynamic query preserved as source: {n["block/uuid"]} ({text})')
             body += '<p class="muted">Query source</p>'
@@ -379,6 +382,20 @@ class Garden:
             content = '<div class="block-body">' + body + '</div>'
         return f'<li class="block" id="{anchor}">{permalink}{content}</li>'
 
+    def embed(self, target, ancestors):
+        # DB graphs store {{embed}} as an empty block whose block/link points at a page or block.
+        if target in ancestors:
+            self.warnings.add(f'Recursive embed skipped: {self.entities[target].get("block/uuid")}')
+            return '<p class="muted">Recursive embed</p>'
+        if target in self.pages:
+            title = f'<a class="page-ref" href="{escape(self.urls[target])}">{escape(self.label(target))}</a>'
+            inner = '<ul class="outline">' + ''.join(self.block(c, ancestors) for c in self.children[target]) + '</ul>'
+            return f'<div class="embed page-embed"><div class="embed-title">{title}</div>{inner}</div>'
+        if target in self.entities and 'block/uuid' in self.entities[target] and 'block/name' not in self.entities[target]:
+            return '<div class="embed block-embed"><ul class="outline">' + self.block(target, ancestors) + '</ul></div>'
+        self.warnings.add(f'Embed target not exported: {target}')
+        return '<p class="muted">Embedded content is not public</p>'
+
     def page_list(self, ids):
         return '<ul class="page-list">' + ''.join(f'<li><a href="{escape(self.urls[i])}">{escape(self.label(i))}</a></li>' for i in sorted(ids, key=lambda i: self.label(i).casefold())) + '</ul>'
 
@@ -388,7 +405,7 @@ class Garden:
         children = self.children[eid]
         # Include exported orphan roots, so missing parents cannot silently lose content.
         orphans = [i for i, b in self.entities.items() if b.get('block/page') == eid and b.get('block/parent') not in self.entities and i not in children]
-        body = self.properties(n) + '<ul class="outline root-outline">' + ''.join(self.block(i) for i in children + orphans) + '</ul>'
+        body = self.properties(n) + '<ul class="outline root-outline">' + ''.join(self.block(i, (eid,)) for i in children + orphans) + '</ul>'
         child_pages = {i for i, page in self.pages.items() if page.get('block/parent') == eid}
         if child_pages:
             body += f'<section class="connections"><h2>Pages within</h2>{self.page_list(child_pages)}</section>'

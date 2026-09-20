@@ -84,6 +84,27 @@ class PublishingTests(unittest.TestCase):
         self.assertEqual(self.g.url(7), '/assets/' + asset + '#page=8')
         self.assertIn('assets/' + asset, self.g.assets)
 
+    def test_page_and_block_embeds_render_linked_content(self):
+        # DB graphs store {{embed}} as an empty block whose block/link points at a page or block.
+        self.nodes[8] = node('', '11111111-1111-4111-8111-000000000008', **{'block/page':1,'block/parent':1,'block/order':'a2','block/link':2,'block/refs':[2]})
+        self.nodes[9] = node('Security detail', '11111111-1111-4111-8111-000000000009', **{'block/page':2,'block/parent':2,'block/order':'a0'})
+        self.nodes[10] = node('', '11111111-1111-4111-8111-000000000010', **{'block/page':1,'block/parent':1,'block/order':'a3','block/link':9,'block/refs':[9]})
+        self.nodes[11] = node('', '11111111-1111-4111-8111-000000000011', **{'block/page':1,'block/parent':1,'block/order':'a4','block/link':6,'block/refs':[6]})
+        g = Garden(self.nodes, self.root, self.config)
+        content = g.page_content(1)
+        self.assertIn('class="embed page-embed"', content)
+        self.assertIn(g.urls[2], content)
+        self.assertEqual(content.count('Security detail'), 2)
+        self.assertIn('class="embed block-embed"', content)
+        self.assertIn('not public', content)
+
+    def test_recursive_embed_does_not_loop(self):
+        self.nodes[8] = node('', '11111111-1111-4111-8111-000000000008', **{'block/page':1,'block/parent':1,'block/order':'a2','block/link':1,'block/refs':[1]})
+        g = Garden(self.nodes, self.root, self.config)
+        content = g.page_content(1)
+        self.assertIn('Recursive embed', content)
+        self.assertTrue(any('Recursive' in w for w in g.warnings))
+
     def test_missing_references_do_not_invent_titles(self):
         result = self.g.md.render('[[99999999-9999-4999-8999-999999999999]]')
         self.assertIn('Unavailable reference', result)
