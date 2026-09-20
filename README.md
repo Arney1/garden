@@ -15,8 +15,8 @@ I love writing in Logseq: outlines, linked notes, and a graph I can get lost in.
 Its public export brought the whole app along, though. Reading my homepage meant
 waiting for a large JavaScript bundle and a browser database to start.
 
-The separate `logseq-static-garden` exporter does that work during the build. Every note
-has its own HTML page. The site keeps the sidebar and outlines, with a custom “a”
+The separate [`logseq-static-garden`](https://github.com/Arney1/logseq-static-garden)
+exporter does that work during the build. Every note has its own HTML page. The site keeps the sidebar and outlines, with a custom “a”
 mark and a layout that works as both a portfolio and a garden.
 
 ## What's here
@@ -81,9 +81,9 @@ contains the original export and build tools.
 ## Two projects, two jobs
 
 This repository is **my personal website**. The reusable renderer lives in a
-separate project, **logseq-static-garden**, with fictional sample content and its
-own tests. Please send renderer improvements there once that repository is
-published. Personal notes and site-specific changes belong here.
+separate project, [**logseq-static-garden**](https://github.com/Arney1/logseq-static-garden),
+with fictional sample content and its own tests. Please send renderer improvements
+there. Personal notes and site-specific changes belong here.
 
 | Path | What it contains |
 | --- | --- |
