@@ -22,6 +22,8 @@ Built for **Logseq 2.0.1 DB graphs -> Export public pages**.
 - Full-text search that downloads its index only when someone searches.
 - Responsive navigation and larger graph touch targets on phones.
 - YouTube video macros, images, audio, and downloadable attachments.
+- Mermaid renderer macros render as diagrams in the browser, loading the
+  bundle only on pages that use them.
 
 Page content and navigation work without JavaScript. Search and the graph use
 small, separate browser scripts. This is a reading site: Logseq editing, plugins,

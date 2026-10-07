@@ -26,3 +26,8 @@
 .video-embed iframe{display:block;width:100%;height:auto;aspect-ratio:16/9;min-height:200px;border:0;border-radius:8px;background:#111}
 .video-embed video{display:block;width:100%;height:auto;max-height:80vh;border-radius:8px;background:#111}
 .video-embed figcaption{margin-top:6px;font-size:12px}
+
+/* Diagrams render client-side; the <pre> source remains as the fallback. */
+.diagram-rendered{margin:12px 0;padding:14px;background:#fff;border:1px solid #34303c;border-radius:8px;overflow-x:auto}
+.diagram-rendered svg{display:block;max-width:100%;height:auto;margin:0 auto}
+pre.mermaid-source.diagram-failed{border-color:#8a3b34}

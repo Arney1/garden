@@ -90,5 +90,14 @@
     "package": "mdurl",
     "license_source_version": "0.1.2",
     "sha256": "7c605df6e28667a9603118e98274f64a49ce3eed0d26fccce9534a345e0ef955"
+  },
+  {
+    "file": "licenses/mermaid/LICENSE.txt",
+    "source": "https://registry.npmjs.org/mermaid/-/mermaid-10.9.3.tgz",
+    "package": "mermaid",
+    "license_source_version": "10.9.3",
+    "sha256": "ec9fb67dcb25eccc416ed56e1aab819222c805a2a4bfe4cb19e7556bf2ffde80",
+    "bundled": "vendor/mermaid/mermaid.min.js",
+    "bundled_sha256": "5a8ec91820bd55afef049068489369910e5d6ce70c8103952f27e29d3e76e8bc"
   }
 ]

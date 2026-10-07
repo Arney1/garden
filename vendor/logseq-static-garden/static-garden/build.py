@@ -28,8 +28,18 @@ REF = re.compile(r'\[\[([^\]]+)\]\]|\(\(([^)]+)\)\)')
 # else gets an inert extension and download-only response headers.
 INLINE_ASSETS = {'.png', '.jpg', '.jpeg', '.webp', '.gif', '.avif', '.ico',
                  '.mp3', '.ogg', '.wav', '.m4a', '.flac', '.mp4', '.webm', '.mov', '.pdf'}
-HEADERS = """/*
-  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' https:; font-src 'self'; connect-src 'self'; media-src 'self' https:; frame-src https://www.youtube-nocookie.com https://player.vimeo.com; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+def csp(inline_styles=False):
+    """The site's Content-Security-Policy. Mermaid's generated SVGs carry inline
+    styles, so diagram pages need 'unsafe-inline' scoped to style-src only."""
+    style = "style-src 'self' 'unsafe-inline'" if inline_styles else "style-src 'self'"
+    return ("default-src 'none'; script-src 'self'; " + style + "; img-src 'self' https:; "
+            "font-src 'self'; connect-src 'self'; media-src 'self' https:; "
+            "frame-src https://www.youtube-nocookie.com https://player.vimeo.com; "
+            "object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
+
+
+HEADERS = f"""/*
+  Content-Security-Policy: {csp()}
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
@@ -203,6 +213,42 @@ def video_segments(text):
     return segments if found else None
 
 
+MERMAID_RENDERER = re.compile(r'\{\{\s*renderer\s*:\s*(?:mermaid|bermaid)\s*\}\}')
+MERMAID_FENCE = re.compile(r'```[^\n`]*\n?(.*?)\n?```', re.S)
+
+
+def mermaid_source(titles):
+    """Pick the first usable child text of a renderer block. The diagram plugin
+    stores Mermaid code in a child block, fenced or bare, beside possible junk
+    (whitespace blocks, empty fences left by the editor)."""
+    for title in titles:
+        text = title.strip()
+        fence = MERMAID_FENCE.fullmatch(text)
+        if fence:
+            text = fence[1].strip()
+        if text:
+            return text
+    return None
+
+
+def headers_text(garden):
+    """Global security headers plus, when the garden has diagrams, per-page rules
+    that swap in the relaxed policy. Cloudflare _headers rules inherit and join,
+    so each scoped rule detaches the global policy before setting its own. The
+    homepage path cannot be overridden reliably (Cloudflare bug) and rules are
+    capped at 100, so those sites relax the global policy instead."""
+    if not garden.diagram_pages:
+        return HEADERS
+    scoped = sorted(garden.urls[p] for p in garden.diagram_pages if p != garden.home)
+    if garden.home in garden.diagram_pages or len(scoped) > 98:
+        return HEADERS.replace(csp(), csp(inline_styles=True))
+    relaxed = csp(inline_styles=True)
+    extra = '\n# Pages with Mermaid diagrams relax style-src for generated inline styles.'
+    for url in scoped:
+        extra += f'\n{url}\n  ! Content-Security-Policy\n  Content-Security-Policy: {relaxed}'
+    return HEADERS + extra
+
+
 def read_entities(db):
     entities = defaultdict(dict)
     many = {k for k, v in db['schema'].items() if isinstance(v, dict) and v.get('db/cardinality') == 'db.cardinality/many'}
@@ -226,6 +272,8 @@ class Garden:
         self.assets = set()
         self.math = {}
         self.rendered_ids = set()
+        self.diagrams = 0
+        self.diagram_pages = set()
         self.pages = {i: n for i, n in entities.items() if 'block/name' in n
                       and not n.get('logseq.property/built-in?')
                       and not str(n.get('db/ident', '')).startswith(('logseq.', 'plugin.'))
@@ -481,6 +529,30 @@ class Garden:
             props.append(f'<dt>{label}</dt><dd>{", ".join(items)}</dd>')
         return '<dl class="properties">' + ''.join(props) + '</dl>' if props else ''
 
+    def mermaid_block(self, eid, n, display):
+        """Render {{renderer :mermaid}} blocks (also the typo'd :bermaid id) as
+        diagrams. The renderer macro owns its child subtree: the first usable
+        child holds the Mermaid source and the rest is editor leftovers."""
+        if display in ('code', 'math') or 'logseq.property.asset/type' in n:
+            return None
+        if not MERMAID_RENDERER.fullmatch(n.get('block/title', '').strip()):
+            return None
+        source = mermaid_source(self.entities[c].get('block/title', '') for c in self.children[eid])
+        if source is None:
+            return None
+        def consume(i):
+            self.rendered_ids.add(i)
+            for c in self.children[i]:
+                consume(c)
+        for c in self.children[eid]:
+            consume(c)
+        self.diagrams += 1
+        if self.current_page in self.pages:
+            self.diagram_pages.add(self.current_page)
+        # The <pre> stays as the no-JavaScript fallback; garden.js swaps in the
+        # rendered SVG when Mermaid loads. escape() keeps diagram code inert.
+        return '<figure class="diagram"><pre class="mermaid-source">' + escape(source) + '</pre></figure>'
+
     def block(self, eid, ancestors=()):
         if eid in ancestors:
             raise ValueError(f'Cycle in block tree: {eid}')
@@ -488,36 +560,41 @@ class Garden:
         self.rendered_ids.add(eid)
         text = n.get('block/title', '')
         display = n.get('logseq.property.node/display-type')
-        segments = video_segments(text) if display not in ('code', 'math') and 'logseq.property.asset/type' not in n else None
-        remaining = '\n'.join(part for kind, part in segments if kind == 'markdown') if segments else text
-        if '{{' in remaining or re.search(r'^#\+BEGIN_(?:QUERY|SRC)', remaining, re.I | re.M):
-            self.warnings.add(f'Macro/query retained as source: {n["block/uuid"]}')
-        if 'logseq.property.asset/type' in n:
-            body = self.asset_html(eid)
-        elif display == 'code':
-            body = '<pre><code>' + self.code(text, n.get('logseq.property.code/lang', '')) + '</code></pre>'
-        elif display == 'math':
-            body = '<div class="math-block">' + self.math_html(text, {'display_mode': True}) + '</div>'
+        diagram = self.mermaid_block(eid, n, display)
+        if diagram is not None:
+            body, rendered = diagram, True
         else:
-            body = ''.join(part if kind == 'video' else self.md.render(part) for kind, part in segments) if segments else self.md.render(text)
-            heading = n.get('logseq.property/heading')
-            if heading and segments is None:
-                level = max(2, min(6, int(heading)))
-                body = f'<h{level}>' + self.md.renderInline(text) + f'</h{level}>'
-            if display == 'quote':
-                body = '<blockquote>' + body + '</blockquote>'
-        link = n.get('block/link')
-        if link is not None and not text.strip():
-            body = self.embed(link, (*ancestors, eid))
-        if n.get('logseq.property/query'):
-            self.warnings.add(f'Dynamic query preserved as source: {n["block/uuid"]} ({text})')
-            body += '<p class="muted">Query source</p>'
-        body += self.properties(n)
+            rendered = False
+            segments = video_segments(text) if display not in ('code', 'math') and 'logseq.property.asset/type' not in n else None
+            remaining = '\n'.join(part for kind, part in segments if kind == 'markdown') if segments else text
+            if '{{' in remaining or re.search(r'^#\+BEGIN_(?:QUERY|SRC)', remaining, re.I | re.M):
+                self.warnings.add(f'Macro/query retained as source: {n["block/uuid"]}')
+            if 'logseq.property.asset/type' in n:
+                body = self.asset_html(eid)
+            elif display == 'code':
+                body = '<pre><code>' + self.code(text, n.get('logseq.property.code/lang', '')) + '</code></pre>'
+            elif display == 'math':
+                body = '<div class="math-block">' + self.math_html(text, {'display_mode': True}) + '</div>'
+            else:
+                body = ''.join(part if kind == 'video' else self.md.render(part) for kind, part in segments) if segments else self.md.render(text)
+                heading = n.get('logseq.property/heading')
+                if heading and segments is None:
+                    level = max(2, min(6, int(heading)))
+                    body = f'<h{level}>' + self.md.renderInline(text) + f'</h{level}>'
+                if display == 'quote':
+                    body = '<blockquote>' + body + '</blockquote>'
+            link = n.get('block/link')
+            if link is not None and not text.strip():
+                body = self.embed(link, (*ancestors, eid))
+            if n.get('logseq.property/query'):
+                self.warnings.add(f'Dynamic query preserved as source: {n["block/uuid"]} ({text})')
+                body += '<p class="muted">Query source</p>'
+            body += self.properties(n)
         children = self.children[eid]
-        nested = '<ul class="outline">' + ''.join(self.block(c, (*ancestors, eid)) for c in children) + '</ul>' if children else ''
+        nested = '' if rendered else ('<ul class="outline">' + ''.join(self.block(c, (*ancestors, eid)) for c in children) + '</ul>' if children else '')
         anchor = 'block-' + n['block/uuid']
         permalink = f'<a class="bullet" href="#{anchor}" aria-label="Link to this block">•</a>'
-        if children:
+        if children and not rendered:
             opened = '' if n.get('block/collapsed?') else ' open'
             content = f'<details{opened}><summary><div class="block-body">{body}</div></summary>{nested}</details>'
         else:
@@ -640,7 +717,8 @@ def build(source, output, config):
     project = HERE.parent
     required_notices = ['LICENSE.md', 'THIRD_PARTY_NOTICES.md', 'licenses/MIT.txt',
                         'licenses/pygments/LICENSE.txt',
-                        'licenses/katex/LICENSE.txt', 'licenses/sources.json']
+                        'licenses/katex/LICENSE.txt', 'licenses/mermaid/LICENSE.txt',
+                        'licenses/sources.json']
     for notice in required_notices:
         if not (project / notice).is_file():
             raise ValueError(f'Required license notice missing: {notice}')
@@ -670,6 +748,8 @@ def build(source, output, config):
     js = (HERE / 'garden.js').read_text()
     css_url = '/site/garden-' + sha256(css.encode()).hexdigest()[:12] + '.css'
     js_url = '/site/garden-' + sha256(js.encode()).hexdigest()[:12] + '.js'
+    mermaid_bytes = (HERE.parent / 'vendor' / 'mermaid' / 'mermaid.min.js').read_bytes()
+    mermaid_url = '/site/mermaid-' + sha256(mermaid_bytes).hexdigest()[:12] + '.js'
     documents, search = {}, []
     for eid, n in garden.pages.items():
         title = garden.label(eid)
@@ -677,7 +757,10 @@ def build(source, output, config):
         date = datetime.fromtimestamp(n['block/updated-at'] / 1000, timezone.utc).strftime('%d %b %Y') if n.get('block/updated-at') else ''
         text = ' '.join(garden.label(i) for i, b in entities.items() if b.get('block/page') == eid)
         description = re.sub(r'\s+', ' ', text).strip()[:170]
-        documents[garden.urls[eid]] = garden.shell(title, body, garden.urls[eid], css_url, js_url, home=eid == garden.home, description=description, date=date)
+        # The bundle URL is a meta tag (CSP allows no inline scripts); garden.js
+        # loads it only on pages that actually contain diagram sources.
+        extra_head = f'<meta name="mermaid-src" content="{mermaid_url}">' if eid in garden.diagram_pages else ''
+        documents[garden.urls[eid]] = garden.shell(title, body, garden.urls[eid], css_url, js_url, home=eid == garden.home, description=description, date=date, extra_head=extra_head)
         search.append({'title':title, 'url':garden.urls[eid], 'text':text})
     expected = {i for i, b in entities.items() if b.get('block/page') in garden.pages and i not in garden.pages}
     missed = expected - garden.rendered_ids
@@ -735,6 +818,8 @@ Publisher notices, when supplied, are listed separately below.</p>'''
         (dest / js_url.lstrip('/')).write_text(js, encoding='utf-8')
         for name, content in graph_files.values():
             (dest / name.lstrip('/')).write_text(content, encoding='utf-8')
+        if garden.diagram_pages:
+            (dest / mermaid_url.lstrip('/')).write_bytes(mermaid_bytes)
         for name, content in license_files.items():
             target = dest / name
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -760,13 +845,13 @@ Publisher notices, when supplied, are listed separately below.</p>'''
         shutil.copy2(icon, dest / 'static/img/logo.png')
         shutil.copy2(icon, dest / 'favicon.png')
         shutil.copy2(logo, dest / f'site/logo-{logo_hash}.svg')
-        (dest / '_headers').write_text(HEADERS, encoding='utf-8')
+        (dest / '_headers').write_text(headers_text(garden), encoding='utf-8')
         base = config.get('url', '').rstrip('/')
         sitemap = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' + ''.join('<url><loc>' + escape(base + url) + '</loc></url>' for url in documents) + '</urlset>'
         (dest / 'sitemap.xml').write_text(sitemap, encoding='utf-8')
         (dest / 'robots.txt').write_text('User-agent: *\nAllow: /\nSitemap: ' + base + '/sitemap.xml\n')
         (dest / '.static-garden-build').write_text('Generated by static-garden/build.py\n')
-        report = {'pages':len(garden.pages), 'graph_nodes':len(graph['nodes']), 'graph_edges':len(graph['links']), 'graph_json_bytes':len(graph_json.encode()), 'graph_javascript_bytes':len(graph_js.encode()), 'blocks':len(garden.rendered_ids), 'assets':len(garden.assets), 'equations':len(equations), 'input_html_bytes':(source/'index.html').stat().st_size, 'homepage_html_bytes':(dest/'index.html').stat().st_size, 'css_bytes':len(css.encode()), 'javascript_bytes':len(js.encode()), 'warnings':sorted(garden.warnings)}
+        report = {'pages':len(garden.pages), 'graph_nodes':len(graph['nodes']), 'graph_edges':len(graph['links']), 'graph_json_bytes':len(graph_json.encode()), 'graph_javascript_bytes':len(graph_js.encode()), 'blocks':len(garden.rendered_ids), 'assets':len(garden.assets), 'equations':len(equations), 'diagrams':garden.diagrams, 'input_html_bytes':(source/'index.html').stat().st_size, 'homepage_html_bytes':(dest/'index.html').stat().st_size, 'css_bytes':len(css.encode()), 'javascript_bytes':len(js.encode()), 'warnings':sorted(garden.warnings)}
         # Build report lives next to the output, not inside the deployed website.
         if output.exists():
             shutil.rmtree(output)

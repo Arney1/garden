@@ -60,6 +60,7 @@ fails the build.
 | Old `#/page/` bookmarks | Small script resolves exported names and UUIDs to static routes |
 | Images, audio, video, PDFs | Referenced files copied; lazy images and media with `preload="none"` |
 | `{{video URL}}` macros and `![](URL)` video links | YouTube and Vimeo players with a watch link, or a native video element for a direct video file |
+| `{{renderer :mermaid}}` blocks | Diagram sources render client-side; see [Diagrams](#diagrams) |
 | Other attachments | Downloads with original filenames offered by the links |
 
 Page URLs include a UUID suffix to avoid slug collisions. Renaming a page changes
@@ -142,6 +143,42 @@ autoplay. A player contacts its provider when it loads; the privacy-enhanced mod
 mean no external requests. Each embed includes a normal watch link for videos with
 playback or embedding restrictions. Unknown providers and invalid URLs stay readable
 source and produce a warning.
+
+## Diagrams
+
+A Mermaid renderer block renders as a diagram. The macro block owns its child
+subtree: the first usable child holds the Mermaid code, fenced or bare, and
+editor leftovers (empty fences, whitespace blocks) are ignored:
+
+````text
+{{renderer :mermaid}}
+    ```mermaid
+    flowchart LR
+        Seed[Idea] --> Evergreen[Evergreen page]
+    ```
+````
+
+Diagrams render **in the visitor's browser**, not during the build: Mermaid needs a
+real layout engine, so pre-rendering would drag a headless browser into every build.
+The trade-offs are handled the same way as search and the graph:
+
+- The Mermaid bundle is copied into the site **only when some page has a diagram**,
+  and it is downloaded only on pages that contain one. Pages without diagrams are
+  unaffected.
+- The diagram source stays in the page as readable text, so it works without
+  JavaScript and in readers; the rendered SVG replaces it when Mermaid loads.
+  Mermaid runs with `securityLevel: 'strict'`, and the page's `script-src 'self'`
+  policy still applies.
+- Mermaid's generated SVGs carry inline styles, which the strict global
+  `style-src 'self'` policy blocks. The generated `_headers` file therefore adds a
+  per-page rule for each diagram page that swaps in `style-src 'unsafe-inline'`;
+  all other pages keep the strict policy. If the homepage itself has diagrams,
+  the global policy is relaxed instead (a Cloudflare quirk prevents overriding
+  the root path per page).
+
+A renderer block whose children contain no usable source stays readable text and
+produces a warning, like other unsupported macros. Other renderer ids (plugins
+such as Excalidraw) are not rendered.
 
 ## Format limits
 

@@ -41,6 +41,28 @@
   legacy();
   window.addEventListener('hashchange', () => { openAnchor(); legacy(); });
 
+  // Mermaid diagrams: the build emits the source in a <pre> (readable without
+  // JavaScript) plus this bundle URL. Pages without diagrams never load it.
+  const diagrams = document.querySelectorAll('pre.mermaid-source');
+  const mermaidSrc = document.querySelector('meta[name="mermaid-src"]');
+  if (diagrams.length && mermaidSrc) {
+    const script = document.createElement('script');
+    script.src = mermaidSrc.content;
+    script.addEventListener('load', () => {
+      const mermaid = window.mermaid;
+      mermaid.initialize({ startOnLoad: false, securityLevel: 'strict' });
+      diagrams.forEach((pre, index) => {
+        mermaid.render('diagram-' + index, pre.textContent).then(result => {
+          const rendered = document.createElement('div');
+          rendered.className = 'diagram-rendered';
+          rendered.innerHTML = result.svg;
+          pre.replaceWith(rendered);
+        }, () => pre.classList.add('diagram-failed'));
+      });
+    });
+    document.head.appendChild(script);
+  }
+
   const input = document.getElementById('search');
   if (!input) return;
   const results = document.getElementById('search-results');
