@@ -14,5 +14,6 @@
     "music",
     "review",
     "essay"
-  ]
+  ],
+  "prune_assets": true
 }

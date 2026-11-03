@@ -145,6 +145,36 @@ class SecurityTests(unittest.TestCase):
                 build(self.source, output, self.config)
         self.assertEqual((output / 'index.html').read_text(), 'previous site')
 
+    def test_prune_assets_removes_unreferenced_files_from_source(self):
+        used = self.source / 'assets/used.png'
+        used.write_bytes(b'keep')
+        orphan = self.source / 'assets/orphan.png'
+        orphan.write_bytes(b'delete')
+        nested_orphan = self.source / 'assets/sub/nested.png'
+        nested_orphan.parent.mkdir()
+        nested_orphan.write_bytes(b'delete')
+        (self.source / 'index.html').write_text('export fixture')
+        self.nodes[2] = {'block/title': '![Used](assets/used.png)',
+                         'block/uuid': '22222222-2222-4222-8222-222222222222',
+                         'block/page': 1, 'block/parent': 1}
+        self.nodes[3] = {'block/name': 'asset', 'block/title': 'Asset',
+                         'block/uuid': '33333333-3333-4333-8333-333333333333',
+                         'logseq.property/built-in?': True, 'db/ident': 'logseq.class/Asset'}
+        self.nodes[4] = {'block/title': 'Orphan',
+                         'block/uuid': '44444444-4444-4444-8444-444444444444',
+                         'block/page': 3, 'block/parent': 3,
+                         'logseq.property.asset/type': 'png'}
+        db = {'schema': {}, 'datoms': [Tagged('datascript/Datom', [eid, attr, value])
+                                     for eid, node in self.nodes.items() for attr, value in node.items()]}
+        output = self.root / 'dist'
+        with patch('build.load_export', return_value=db):
+            report = build(self.source, output, self.config, prune_assets=True)
+        self.assertTrue(used.exists())
+        self.assertFalse(orphan.exists())
+        self.assertFalse(nested_orphan.exists())
+        self.assertFalse(nested_orphan.parent.exists())
+        self.assertEqual(report.get('pruned_assets'), 2)
+
 
 if __name__ == '__main__':
     unittest.main()

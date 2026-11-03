@@ -26,7 +26,9 @@ Once dependencies are installed, an offline build can run directly:
 `--source` defaults to the current directory. `--output` defaults to `SOURCE/dist`.
 `--config` defaults to `SOURCE/site.json`, falling back to the generic exporter
 configuration. Paths are resolved from the current directory. A supplied `--config`
-that does not exist fails the build.
+that does not exist fails the build. `--prune-assets` (or `"prune_assets": true` in
+`site.json`) removes unreferenced files from the source's `assets/` directory (skipping
+assets that are only listed in built-in class pages like `#Asset` and never referenced in any page).
 
 The build uses a temporary directory, checks block coverage and attachment sizes,
 then replaces the generated output. It refuses to replace the source, the exporter,
