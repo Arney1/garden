@@ -52,6 +52,8 @@ fails the build.
 | Source feature | Published behavior |
 | --- | --- |
 | Blocks and properties | Nested HTML outlines, native collapse controls, visible property values |
+| Numbered blocks (`tn`) | Native ordered outlines, sibling numbering and block permalinks |
+| Page icons | Emoji Mart IDs (including skin variants) and Tabler outline/filled SVG icons |
 | Page and block references | Links to pages and block anchors |
 | Tags, nested pages, backlinks | Collections and related-page lists computed at build time |
 | Code and equations | Pygments highlighting and native MathML, rendered during the build |
@@ -75,6 +77,39 @@ inside the graph. Dragging and pinch-to-zoom remain available.
 The source directory’s `site.json` controls the collection links in both the desktop sidebar and the
 mobile Explore menu. Links appear only when their targets exist in the public export.
 
+### Publisher styling and page directory
+
+All Pages groups titles into A–Z sections with an alphabet rail. Accented Latin
+initials share their base-letter group; numbers, symbols and other scripts go
+under `#`. Native alphabet links work without JavaScript. Typing uses the
+full-text search; Escape clears it, and Arrow Down focuses the first result.
+
+To style only your site, add `theme/style.css` beside its `site.json`. The build
+appends it after the default CSS and code highlighting rules, then fingerprints
+the combined stylesheet. Files matching `theme/*.woff2` are copied to `/theme/`
+for self-hosted fonts. No other theme assets are copied. Publisher CSS is trusted
+configuration, not graph content. Graph canvas colors can be overridden with
+`--graph-home`, `--graph-tag`, `--graph-page`, `--graph-edge`,
+`--graph-edge-active`, `--graph-edge-dim`, `--graph-selected`,
+`--graph-background`, `--graph-label`, and `--graph-label-active`.
+
+Set `"decorative_copy": false` in your site's `site.json` to hide the homepage
+eyebrow, sidebar note, brand tagline, introductory slogans and decorative footer
+wording, and use plain empty-page and 404 messages. Other publishers retain the
+default copy.
+
+DB public exports sometimes omit the entity referenced by
+`logseq.property/order-list-type`. In that case the exporter uses decimal
+numbering (Logseq's `tn` style) and records a warning. Explicit string values
+and exported closed-value entities are resolved first; entity IDs are never
+hardcoded. Numbered siblings continue counting across intervening bullets, with
+each child level starting at one.
+
+Page icon registries are bundled for offline builds; only selected SVGs and
+Unicode emoji enter the generated HTML. Unknown icon IDs produce a warning
+instead of silently dropping metadata. Refresh the trusted registries with
+`python3 static-garden/vendor-icons.py` when updating the pinned libraries.
+
 ## Security and attachments
 
 Raw HTML is disabled in Markdown. Graph text is not evaluated as code, and link
@@ -97,7 +132,8 @@ Local attachments have two destinations:
   `Content-Disposition: attachment` and an additional sandbox CSP. They cannot
   become executable pages on the garden's origin.
 
-The only local SVG served as an image is the trusted logo from the source directory’s `branding/` (or the generic default). Asset paths
+Local SVG markup comes only from the trusted logo in the source directory’s
+`branding/` (or the generic default) and bundled Tabler page icons. Asset paths
 and symlinks escaping the source's `assets/` directory fail the build. Attachment
 contents are not modified or scanned for malware; downloaded files remain untrusted.
 Old direct URLs to files moved into `/downloads/` change; generated note links

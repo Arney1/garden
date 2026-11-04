@@ -33,7 +33,16 @@
   for (const [a, b] of links) { neighbors[a].add(b); neighbors[b].add(a); }
   let selected = -1, hovered = -1, width = 1, height = 1, scale = 1, offsetX = 0, offsetY = 0;
   let visible = new Set(), visibleLinks = [], pending = false;
-  const colors = {home:'#98bfa2', tag:'#ba9df0', page:'#8a849c'};
+  const styles = getComputedStyle(document.documentElement);
+  const themeColor = (name, fallback) => styles.getPropertyValue('--graph-' + name).trim() || fallback;
+  const colors = {home:themeColor('home', '#98bfa2'), tag:themeColor('tag', '#ba9df0'), page:themeColor('page', '#8a849c')};
+  const edge = themeColor('edge', 'rgba(125,110,145,.18)');
+  const edgeActive = themeColor('edge-active', 'rgba(185,154,224,.65)');
+  const edgeDim = themeColor('edge-dim', 'rgba(110,97,130,.10)');
+  const selectedColor = themeColor('selected', '#e6d9fc');
+  const background = themeColor('background', '#17171b');
+  const labelColor = themeColor('label', '#c2b5d1');
+  const labelActive = themeColor('label-active', '#f3eafb');
   const radius = i => (2.8 + Math.min(6, Math.sqrt(neighbors[i].size) * .7)) * Math.max(.5, Math.min(1.4, Math.sqrt(scale)));
   const point = n => ({x: n.x * scale + offsetX, y: n.y * scale + offsetY});
   const requestDraw = () => {
@@ -45,7 +54,7 @@
     context.clearRect(0,0,width,height);
     for (const [a,b] of visibleLinks) {
       const active = selected === a || selected === b;
-      context.strokeStyle = active ? 'rgba(185,154,224,.65)' : (selected >= 0 ? 'rgba(110,97,130,.10)' : 'rgba(125,110,145,.18)');
+      context.strokeStyle = active ? edgeActive : (selected >= 0 ? edgeDim : edge);
       context.lineWidth = active ? 1.25 : .65;
       const p = point(nodes[a]), q = point(nodes[b]);
       context.beginPath(); context.moveTo(p.x,p.y); context.lineTo(q.x,q.y); context.stroke();
@@ -60,7 +69,7 @@
       context.fillStyle = colors[n.kind] || colors.page;
       context.beginPath(); context.arc(p.x,p.y,radius(i) * (active ? 1.2 : 1),0,Math.PI*2); context.fill();
       if (selected === i) {
-        context.strokeStyle = '#e6d9fc'; context.lineWidth = 1.5;
+        context.strokeStyle = selectedColor; context.lineWidth = 1.5;
         context.beginPath(); context.arc(p.x,p.y,radius(i)+4,0,Math.PI*2); context.stroke();
       }
       if (active || (labels.checked && related && (scale > .9 || n.kind === 'home' || (neighbors[i].size > 15 && selected < 0) || (selected >= 0 && neighbors[selected].has(i))))) {
@@ -69,9 +78,9 @@
         const box = {x:p.x+radius(i)+5, y:p.y-9, w:context.measureText(title).width+5, h:16};
         if (!active && labelBoxes.some(b=>box.x<b.x+b.w && box.x+box.w>b.x && box.y<b.y+b.h && box.y+box.h>b.y)) continue;
         labelBoxes.push(box);
-        context.lineWidth = 4; context.strokeStyle = '#17171b';
+        context.lineWidth = 4; context.strokeStyle = background;
         context.strokeText(title,p.x+radius(i)+5,p.y+4);
-        context.fillStyle = active ? '#f3eafb' : '#c2b5d1'; context.fillText(title,p.x+radius(i)+5,p.y+4);
+        context.fillStyle = active ? labelActive : labelColor; context.fillText(title,p.x+radius(i)+5,p.y+4);
       }
     }
     context.globalAlpha = 1;

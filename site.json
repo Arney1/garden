@@ -1,9 +1,10 @@
 {
   "title": "Arney Nova",
   "home_page": "Arney Nova",
-  "description": "A personal, evolving space for notes, ideas, and experiments. Security, software engineering, music, and things I'm figuring out.",
+  "description": "Arney Nova — notes on security, software engineering, and music.",
   "url": "https://arney-garden.pages.dev",
   "language": "en",
+  "decorative_copy": false,
   "navigation": [
     "project",
     "Security",

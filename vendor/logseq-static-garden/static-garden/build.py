@@ -11,6 +11,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+import unicodedata
 from urllib.parse import parse_qs, quote, unquote, urlsplit
 
 from markdown_it import MarkdownIt
@@ -19,6 +20,7 @@ from pygments import highlight
 from pygments.formatters import HtmlFormatter
 from pygments.lexers import get_lexer_by_name, TextLexer
 from pygments.util import ClassNotFound
+from icons import render_icon
 from transit_reader import load_export
 
 HERE = Path(__file__).resolve().parent
@@ -420,7 +422,8 @@ class Garden:
         href = self.url(eid)
         self.record_link(eid)
         if href:
-            return f'<a class="page-ref" href="{escape(href, quote=True)}"{download_attribute(href)}>{escape(label)}</a>'
+            icon = self.page_icon(eid) if eid in self.pages else ''
+            return f'<a class="page-ref" href="{escape(href, quote=True)}"{download_attribute(href)}>{icon}{escape(label)}</a>'
         self.warnings.add(f'Unresolved reference: {meta["target"]}')
         return f'<span class="unavailable">{escape(label)}</span>'
 
@@ -553,7 +556,43 @@ class Garden:
         # rendered SVG when Mermaid loads. escape() keeps diagram code inert.
         return '<figure class="diagram"><pre class="mermaid-source">' + escape(source) + '</pre></figure>'
 
-    def block(self, eid, ancestors=()):
+    def numbered(self, eid):
+        value = self.entities[eid].get('logseq.property/order-list-type')
+        if type(value) is int:
+            entity = self.entities.get(value, {})
+            resolved = entity.get('logseq.property/value', entity.get('block/title'))
+            if resolved is None:
+                # Public exports can omit the closed-value entity. DB Logseq's
+                # toggle stores only the "number" style; do not depend on its ID.
+                self.warnings.add('Numbered-list style entities omitted by export; using decimal numbering.')
+                return True
+            value = resolved
+        return isinstance(value, str) and value.casefold() == 'number'
+
+    def outline(self, ids, ancestors=(), *, root=False):
+        """Keep sibling numbering local, including embeds and orphan roots."""
+        classes = 'outline root-outline' if root else 'outline'
+        parts, items, previous, number, start = [], [], None, 0, 1
+        def flush():
+            if not items:
+                return
+            tag = 'ol' if previous else 'ul'
+            attr = f' start="{start}"' if previous and start != 1 else ''
+            parts.append(f'<{tag} class="{classes}"{attr}>' + ''.join(items) + f'</{tag}>')
+            items.clear()
+        for eid in ids:
+            ordered = self.numbered(eid)
+            if ordered != previous:
+                flush()
+                start = number + 1
+            previous = ordered
+            if ordered:
+                number += 1
+            items.append(self.block(eid, ancestors, number=number if ordered else None))
+        flush()
+        return ''.join(parts) or f'<ul class="{classes}"></ul>'
+
+    def block(self, eid, ancestors=(), *, number=None):
         if eid in ancestors:
             raise ValueError(f'Cycle in block tree: {eid}')
         n = self.entities[eid]
@@ -591,9 +630,11 @@ class Garden:
                 body += '<p class="muted">Query source</p>'
             body += self.properties(n)
         children = self.children[eid]
-        nested = '' if rendered else ('<ul class="outline">' + ''.join(self.block(c, (*ancestors, eid)) for c in children) + '</ul>' if children else '')
+        nested = self.outline(children, (*ancestors, eid)) if children and not rendered else ''
         anchor = 'block-' + n['block/uuid']
-        permalink = f'<a class="bullet" href="#{anchor}" aria-label="Link to this block">•</a>'
+        marker = f'{number}.' if number is not None else '•'
+        marker_class = 'bullet numbered' if number is not None else 'bullet'
+        permalink = f'<a class="{marker_class}" href="#{anchor}" aria-label="Link to this block">{marker}</a>'
         if children and not rendered:
             opened = '' if n.get('block/collapsed?') else ' open'
             content = f'<details{opened}><summary><div class="block-body">{body}</div></summary>{nested}</details>'
@@ -608,15 +649,40 @@ class Garden:
             return '<p class="muted">Recursive embed</p>'
         if target in self.pages:
             title = f'<a class="page-ref" href="{escape(self.urls[target])}">{escape(self.label(target))}</a>'
-            inner = '<ul class="outline">' + ''.join(self.block(c, ancestors) for c in self.children[target]) + '</ul>'
+            inner = self.outline(self.children[target], ancestors)
             return f'<div class="embed page-embed"><div class="embed-title">{title}</div>{inner}</div>'
         if target in self.entities and 'block/uuid' in self.entities[target] and 'block/name' not in self.entities[target]:
-            return '<div class="embed block-embed"><ul class="outline">' + self.block(target, ancestors) + '</ul></div>'
+            return '<div class="embed block-embed">' + self.outline([target], ancestors) + '</div>'
         self.warnings.add(f'Embed target not exported: {target}')
         return '<p class="muted">Embedded content is not public</p>'
 
+    def page_icon(self, eid):
+        value = self.entities.get(eid, {}).get('logseq.property/icon')
+        icon = render_icon(value)
+        if value and not icon:
+            self.warnings.add(f'Unsupported page icon: {value!r}')
+        return icon
+
     def page_list(self, ids):
-        return '<ul class="page-list">' + ''.join(f'<li><a href="{escape(self.urls[i])}">{escape(self.label(i))}</a></li>' for i in sorted(ids, key=lambda i: self.label(i).casefold())) + '</ul>'
+        return '<ul class="page-list">' + ''.join(f'<li><a href="{escape(self.urls[i])}">{self.page_icon(i)}<span>{escape(self.label(i))}</span></a></li>' for i in sorted(ids, key=lambda i: self.label(i).casefold())) + '</ul>'
+
+    def page_directory(self):
+        groups = defaultdict(list)
+        for eid in self.pages:
+            title = unicodedata.normalize('NFKD', self.label(eid)).strip()
+            initial = title[:1].upper()
+            groups[initial if initial and initial in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' else '#'].append(eid)
+        rail, sections = [], []
+        for letter in ['#', *'ABCDEFGHIJKLMNOPQRSTUVWXYZ']:
+            if letter not in groups:
+                rail.append(f'<span aria-hidden="true">{letter}</span>')
+                continue
+            anchor = 'other' if letter == '#' else letter
+            rail.append(f'<a href="#letter-{anchor}" aria-label="Pages: {letter}">{letter}</a>')
+            sections.append(f'<section class="letter-group" id="letter-{anchor}" aria-labelledby="heading-{anchor}">'
+                            f'<h2 id="heading-{anchor}">{letter}</h2>{self.page_list(groups[letter])}</section>')
+        return ('<div class="page-directory"><nav class="alphabet" aria-label="Page alphabet">' + ''.join(rail)
+                + '</nav><div class="letter-groups">' + ''.join(sections) + '</div></div>')
 
     def page_content(self, eid):
         self.current_page = eid
@@ -624,7 +690,7 @@ class Garden:
         children = self.children[eid]
         # Include exported orphan roots, so missing parents cannot silently lose content.
         orphans = [i for i, b in self.entities.items() if b.get('block/page') == eid and b.get('block/parent') not in self.entities and i not in children]
-        body = self.properties(n) + '<ul class="outline root-outline">' + ''.join(self.block(i, (eid,)) for i in children + orphans) + '</ul>'
+        body = self.properties(n) + self.outline(children + orphans, (eid,), root=True)
         child_pages = {i for i, page in self.pages.items() if page.get('block/parent') == eid}
         if child_pages:
             body += f'<section class="connections"><h2>Pages within</h2>{self.page_list(child_pages)}</section>'
@@ -635,23 +701,36 @@ class Garden:
         if backlinks:
             body += f'<section class="connections"><details><summary><h2>Linked references <span>{len(backlinks)}</span></h2></summary>{self.page_list(backlinks)}</details></section>'
         if not children and not tagged and not backlinks:
-            body += '<p class="muted">A seed in the garden. More notes to come.</p>'
+            message = 'A seed in the garden. More notes to come.' if self.config.get('decorative_copy', True) else 'No content yet.'
+            body += f'<p class="muted">{message}</p>'
         body += f'<p><a class="graph-local" href="/graph/?page={n["block/uuid"]}">◌ Explore connections in Graph view</a></p>'
         if eid == self.home:
             body = body.replace('loading="lazy"', 'loading="eager" fetchpriority="high"', 1)
         return body
 
     def shell(self, title, body, url, css, js, *, home=False, description='', date='', extra_head=''):
+        decorative = self.config.get('decorative_copy', True)
         nav = []
         for label in self.config['navigation']:
             eid = self.resolve(label)
             if eid in self.urls:
                 current = ' aria-current="page"' if url == self.urls[eid] else ''
-                nav.append(f'<a href="{escape(self.urls[eid])}"{current}><span class="nav-dot">◦</span>{escape(label)}</a>')
+                marker = self.page_icon(eid) or '<span class="nav-dot">◦</span>'
+                nav.append(f'<a href="{escape(self.urls[eid])}"{current}>{marker}{escape(label)}</a>')
         site = escape(self.config['title'])
         canonical = self.config.get('url', '').rstrip('/') + url
         desc = escape(description or self.config['description'], quote=True)
         subtitle = '<p class="eyebrow">A PERSONAL CORNER OF THE INTERNET</p>' if home else '<p class="eyebrow"><a href="/pages/">THE GARDEN</a></p>'
+        if not decorative:
+            subtitle = ''
+        page_id = next((eid for eid, path in self.urls.items() if path == url), None)
+        title_icon = self.page_icon(page_id)
+        journal_class = ' journal' if self.entities.get(page_id, {}).get('block/journal-day') else ''
+        tagline = '<small>portfolio & digital garden</small>' if decorative else ''
+        sidebar_note = '<div class="sidebar-note"><span class="status-dot"></span> Always growing.<p>Notes, things I make,<br>and things I’m figuring out.</p></div>' if decorative else ''
+        footer_copy = 'Made of curiosity. ' if decorative else ''
+        collection_label = 'PATHS THROUGH THE GARDEN' if decorative else 'COLLECTIONS'
+        browse_label = 'Wander the garden ↗' if decorative else 'All pages ↗'
         meta = f'<p class="page-meta">Updated {escape(date)}</p>' if date else ''
         logo_hash = sha256((self.branding / 'logo.svg').read_bytes()).hexdigest()[:12]
         document_title = site + ' · Portfolio & Garden' if home else escape(title) + ' · ' + site
@@ -669,19 +748,19 @@ class Garden:
                                for label, href in [('Home', '/'), ('Pages', '/pages/'), ('Search', '/pages/#search'), ('Graph', '/graph/')])
         mobile_nav = f'''<nav class="mobile-nav" aria-label="Mobile navigation">{mobile_links}
 <details class="mobile-explore"><summary>{icon('Explore')}<span>Explore</span></summary>
-<div class="mobile-explore-panel"><p>Paths through the garden</p>{''.join(nav)}<a href="/licenses/">Licenses</a></div></details></nav>'''
+<div class="mobile-explore-panel"><p>{collection_label}</p>{''.join(nav)}<a href="/licenses/">Licenses</a></div></details></nav>'''
         return f'''<!doctype html>
 <html lang="{escape(self.config.get('language', 'en'))}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>{document_title}</title><meta name="description" content="{desc}">
 <link rel="canonical" href="{escape(canonical, quote=True)}"><meta property="og:title" content="{escape(title, quote=True)}"><meta property="og:description" content="{desc}"><meta property="og:type" content="website"><meta property="og:url" content="{escape(canonical, quote=True)}">
 <link rel="icon" type="image/svg+xml" href="/site/logo-{logo_hash}.svg"><link rel="icon" type="image/png" sizes="512x512" href="/static/img/logo.png?v={logo_hash}"><link rel="apple-touch-icon" href="/static/img/logo.png?v={logo_hash}"><meta property="og:image" content="{escape(self.config.get('url', '').rstrip('/'), quote=True)}/static/img/logo.png"><link rel="stylesheet" href="{css}"><script src="{js}" defer></script>{extra_head}</head>
 <body><a class="skip" href="#content">Skip to content</a>
-<aside class="sidebar"><a class="brand" href="/"><img class="brand-logo" src="/site/logo-{logo_hash}.svg" width="38" height="38" alt=""><span>{site}<small>portfolio & digital garden</small></span></a>
-<details class="site-nav" open><summary>Explore</summary><nav aria-label="Main navigation"><a href="/">⌂ &nbsp; Home</a><a href="/pages/">▤ &nbsp; All pages</a><a href="/pages/#search">⌕ &nbsp; Search</a><a href="/graph/">◌ &nbsp; Graph view</a><p class="nav-label">PATHS THROUGH THE GARDEN</p>{''.join(nav)}</nav></details>
-<div class="sidebar-note"><span class="status-dot"></span> Always growing.<p>Notes, things I make,<br>and things I’m figuring out.</p></div></aside>
+<aside class="sidebar"><a class="brand" href="/"><img class="brand-logo" src="/site/logo-{logo_hash}.svg" width="38" height="38" alt=""><span>{site}{tagline}</span></a>
+<details class="site-nav" open><summary>Explore</summary><nav aria-label="Main navigation"><a href="/">⌂ &nbsp; Home</a><a href="/pages/">▤ &nbsp; All pages</a><a href="/pages/#search">⌕ &nbsp; Search</a><a href="/graph/">◌ &nbsp; Graph view</a><p class="nav-label">{collection_label}</p>{''.join(nav)}</nav></details>
+{sidebar_note}</aside>
 <div class="workspace"><header class="topbar"><a href="/">{site}<span> / {('home' if home else 'garden')}</span></a><a href="/pages/#search" aria-label="Search the garden">⌕ <span>Find a note</span></a></header>
-<main id="content" class="{'graph-page' if url == '/graph/' else 'home' if home else 'note'}">{subtitle}<h1>{escape(title)}</h1>{meta}{body}</main>
-<footer>Made of curiosity. <a href="/licenses/">Licenses</a><a href="/pages/">Wander the garden ↗</a></footer></div>{mobile_nav}</body></html>'''
+<main id="content" class="{'graph-page' if url == '/graph/' else 'home' if home else 'note'}{journal_class}">{subtitle}<h1>{title_icon}{escape(title)}</h1>{meta}{body}</main>
+<footer>{footer_copy}<a href="/licenses/">Licenses</a><a href="/pages/">{browse_label}</a></footer></div>{mobile_nav}</body></html>'''
 
 
 def render_math(garden):
@@ -745,6 +824,10 @@ def build(source, output, config):
     entities = read_entities(load_export(source / 'index.html'))
     garden = Garden(entities, source, config)
     css = (HERE / 'garden.css').read_text() + '\n' + HtmlFormatter(style='native').get_style_defs('pre')
+    # Publisher styling stays outside the pinned exporter and raw Logseq files.
+    theme = source / 'theme'
+    if (theme / 'style.css').is_file():
+        css += '\n' + (theme / 'style.css').read_text()
     js = (HERE / 'garden.js').read_text()
     css_url = '/site/garden-' + sha256(css.encode()).hexdigest()[:12] + '.css'
     js_url = '/site/garden-' + sha256(js.encode()).hexdigest()[:12] + '.js'
@@ -766,7 +849,8 @@ def build(source, output, config):
     missed = expected - garden.rendered_ids
     if missed:
         raise ValueError(f'{len(missed)} exported blocks have not been rendered: {sorted(missed)[:20]}')
-    search_body = f'''<p class="intro">{len(garden.pages)} notes, connected by curiosity.</p><label class="search-label" for="search">Find a page</label><input type="search" id="search" placeholder="Search titles and notes…" autocomplete="off"><p id="search-status" class="muted" role="status">Browse all pages below. Type to search.</p><div id="search-results">{garden.page_list(garden.pages)}</div>'''
+    intro = f'<p class="intro">{len(garden.pages)} notes, connected by curiosity.</p>' if config.get('decorative_copy', True) else ''
+    search_body = f'''{intro}<label class="search-label" for="search">Find a page</label><input type="search" id="search" placeholder="Search titles and notes…" autocomplete="off"><p id="search-status" class="muted" role="status">{len(garden.pages)} pages · Browse A–Z or type to search.</p><div id="search-results">{garden.page_directory()}</div>'''
     documents['/pages/'] = garden.shell('All pages', search_body, '/pages/', css_url, js_url)
     graph = garden.graph_data()
     positioned = subprocess.run(['node', str(HERE / 'graph-layout.cjs')], input=json.dumps(graph),
@@ -778,8 +862,8 @@ def build(source, output, config):
     for extension, content in [('json', graph_json), ('js', graph_js), ('css', graph_css)]:
         name = '/site/graph-' + sha256(content.encode()).hexdigest()[:12] + '.' + extension
         graph_files[extension] = (name, content)
-    graph_body = f'''<p class="graph-intro">Follow the threads between notes, projects, and ideas.</p>
-<div class="graph-toolbar"><label class="graph-search-label" for="graph-search"><input id="graph-search" type="search" placeholder="Find a page in the graph…" aria-label="Find a page in the graph" autocomplete="off"></label>
+    intro = '<p class="graph-intro">Follow the threads between notes, projects, and ideas.</p>' if config.get('decorative_copy', True) else ''
+    graph_body = f'''{intro}<div class="graph-toolbar"><label class="graph-search-label" for="graph-search"><input id="graph-search" type="search" placeholder="Find a page in the graph…" aria-label="Find a page in the graph" autocomplete="off"></label>
 <label><input type="checkbox" id="graph-local"> Selected + neighbors</label><label><input type="checkbox" id="graph-isolated" checked> Unlinked pages</label><label><input type="checkbox" id="graph-labels" checked> Labels</label>
 </div><ul class="graph-results" id="graph-results" aria-label="Matching pages"></ul>
 <div class="graph-actions"><button id="graph-zoom-in" type="button" aria-label="Zoom in">+</button><button id="graph-zoom-out" type="button" aria-label="Zoom out">−</button><button id="graph-fit" type="button">Fit graph</button><button id="graph-clear" type="button">Clear selection</button></div>
@@ -802,7 +886,8 @@ Publisher notices, when supplied, are listed separately below.</p>'''
     credits += '<ul>' + ''.join(f'<li><a href="/{quote(name, safe="/")}">{escape(name.removeprefix("licenses/"))}</a></li>'
                                for name in sorted(license_files)) + '</ul>'
     documents['/licenses/'] = garden.shell('Licenses', credits, '/licenses/', css_url, js_url)
-    error_page = garden.shell('This path hasn’t grown yet.', '<p>This page may have moved. <a href="/pages/">Find it in the garden</a>.</p>', '/404.html', css_url, js_url)
+    error_title = 'This path hasn’t grown yet.' if config.get('decorative_copy', True) else 'Page not found'
+    error_page = garden.shell(error_title, '<p>This page may have moved. <a href="/pages/">Browse all pages</a>.</p>', '/404.html', css_url, js_url)
     equations = render_math(garden)
     pattern = re.compile(r'<!--GARDEN_MATH_(\d+)-->')
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -816,6 +901,11 @@ Publisher notices, when supplied, are listed separately below.</p>'''
         (dest / 'site').mkdir()
         (dest / css_url.lstrip('/')).write_text(css, encoding='utf-8')
         (dest / js_url.lstrip('/')).write_text(js, encoding='utf-8')
+        for font in sorted(theme.glob('*.woff2')):
+            if font.is_symlink():
+                raise ValueError(f'Theme fonts must not be symlinks: {font}')
+            (dest / 'theme').mkdir(exist_ok=True)
+            shutil.copy2(font, dest / 'theme' / font.name)
         for name, content in graph_files.values():
             (dest / name.lstrip('/')).write_text(content, encoding='utf-8')
         if garden.diagram_pages:

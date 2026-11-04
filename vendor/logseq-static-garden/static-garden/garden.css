@@ -31,3 +31,34 @@
 .diagram-rendered{margin:12px 0;padding:14px;background:#fff;border:1px solid #34303c;border-radius:8px;overflow-x:auto}
 .diagram-rendered svg{display:block;max-width:100%;height:auto;margin:0 auto}
 pre.mermaid-source.diagram-failed{border-color:#8a3b34}
+
+/* Numbered outlines use the same permalink controls as ordinary bullets. */
+.numbered{left:auto;right:calc(100% + 7px);min-width:2ch;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.outline:has(>.block>.numbered){padding-left:36px}
+.root-outline:has(>.block>.numbered){margin-left:12px}
+.block:has(>.numbered)>details>summary:before{left:-42px}
+.page-icon{display:inline-block;width:1.15em;height:1.15em;margin-right:.5em;vertical-align:-.16em;flex-shrink:0}
+.page-icon.emoji{width:auto;line-height:1}
+.page-list a{display:inline-flex;align-items:baseline}
+
+/* Launcher-style page directory. Native anchors work without JavaScript. */
+.page-directory{position:relative;padding-right:42px}
+.letter-group{scroll-margin-top:24px;margin:32px 0}
+.letter-group h2{font-size:1.6rem;color:var(--accent);margin-bottom:10px}
+.letter-group .page-list{columns:1;margin:0}
+.letter-group .page-list li{font-size:1.08rem;padding:0}
+.letter-group .page-list a{display:flex;align-items:center;min-height:48px;padding:8px 12px;border-radius:12px;color:var(--text)}
+.letter-group .page-list a:hover{background:var(--surface);color:var(--accent);text-decoration:none}
+.alphabet{position:sticky;top:18px;float:right;margin-right:-42px;display:flex;flex-direction:column;align-items:center;width:32px;max-height:calc(100dvh - 40px);overflow-y:auto;overscroll-behavior:contain;border-radius:18px;background:var(--panel);padding:5px 0}
+.alphabet a,.alphabet>span{display:flex;justify-content:center;align-items:center;min-height:21px;width:30px;padding:0;font-size:11px;line-height:1.2}
+.alphabet>span{color:var(--muted);opacity:.35}
+.alphabet a:hover,.alphabet a:focus-visible{background:var(--surface);text-decoration:none}
+.letter-group:target h2{color:var(--text)}
+@media(max-width:640px){
+  .page-directory{padding-right:32px}
+  .alphabet{margin-right:-32px;top:12px;max-height:calc(100dvh - 130px)}
+  .alphabet a,.alphabet>span{min-height:clamp(14px,1.7dvh,18px);font-size:10px}
+  .letter-group .page-list a{padding-left:0}
+  .root-outline:has(>.block>.numbered){padding-left:20px}
+}
+@media print{.alphabet{display:none}.page-directory{padding-right:0}.numbered{display:inline}}
