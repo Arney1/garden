@@ -73,7 +73,7 @@ class MermaidTests(unittest.TestCase):
         self.assertFalse(self.g.warnings)
 
     def test_bermaid_typo_and_spacing_both_render(self):
-        for title in ('{{renderer :bermaid}}', '{{renderer:mermaid}}', ' {{renderer :mermaid}} '):
+        for title in ('{{renderer :bermaid}}', '{{renderer:mermaid}}', ' {{renderer :mermaid}} ', '{{renderer :bermaid, 367}}', '{{renderer :mermaid, 400}}', '{{renderer :bermaid , 367}}'):
             with self.subTest(title=title):
                 self.nodes[2]['block/title'] = title
                 self.assertIn('mermaid-source', self.g.block(2))

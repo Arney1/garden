@@ -215,7 +215,7 @@ def video_segments(text):
     return segments if found else None
 
 
-MERMAID_RENDERER = re.compile(r'\{\{\s*renderer\s*:\s*(?:mermaid|bermaid)\s*\}\}')
+MERMAID_RENDERER = re.compile(r'\{\{\s*renderer\s*:\s*(?:mermaid|bermaid)(?:\s*,[^}]*)?\s*\}\}')
 MERMAID_FENCE = re.compile(r'```[^\n`]*\n?(.*?)\n?```', re.S)
 
 
@@ -787,7 +787,7 @@ process.stdout.write(JSON.stringify(input.map(([s, display]) => {
     return output
 
 
-def build(source, output, config):
+def build(source, output, config, *, prune_assets=False):
     source, output = source.resolve(), output.resolve()
     if output == source or source.is_relative_to(output) or HERE.parent.is_relative_to(output):
         raise ValueError('Output must not replace or contain the original export')
@@ -946,6 +946,18 @@ Publisher notices, when supplied, are listed separately below.</p>'''
         if output.exists():
             shutil.rmtree(output)
         shutil.copytree(dest, output)
+    if prune_assets:
+        assets_dir = source / 'assets'
+        if assets_dir.is_dir():
+            unused = [p for p in sorted(assets_dir.rglob('*'))
+                      if p.is_file() and p.relative_to(source).as_posix() not in garden.assets]
+            for p in unused:
+                p.unlink()
+            for p in sorted(assets_dir.rglob('*'), reverse=True):
+                if p.is_dir() and not any(p.iterdir()):
+                    p.rmdir()
+            report['pruned_assets'] = len(unused)
+            print(f'Pruned {len(unused)} unused asset(s) from {assets_dir}')
     (output.parent / (output.name + '-report.json')).write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding='utf-8')
     print(json.dumps({k:v for k,v in report.items() if k != 'warnings'}, indent=2))
     print(f'Warnings: {len(garden.warnings)} (see {output.name}-report.json)')
@@ -958,12 +970,15 @@ def main():
     parser.add_argument('--source', type=Path, default=Path.cwd())
     parser.add_argument('--output', type=Path)
     parser.add_argument('--config', type=Path)
+    parser.add_argument('--prune-assets', action='store_true',
+                        help='Delete unreferenced asset files from source assets/ directory')
     args = parser.parse_args()
     config_path = args.config or args.source / 'site.json'
     if not config_path.is_file() and args.config is None:
         config_path = HERE / 'site.json'
     config = json.loads(config_path.read_text())
-    build(args.source, args.output or args.source / 'dist', config)
+    prune = args.prune_assets or bool(config.get('prune_assets', False))
+    build(args.source, args.output or args.source / 'dist', config, prune_assets=prune)
 
 
 if __name__ == '__main__':

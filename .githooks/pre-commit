@@ -1,4 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 repo_root="$(git rev-parse --show-toplevel)"
+
+# Prune unreferenced assets from assets/ if an export was staged or modified
+if git diff --cached --name-only | grep -qE '^(index\.html|assets/)'; then
+  if [[ -x "$repo_root/.venv-static/bin/python" ]]; then
+    echo "Static garden: pruning unreferenced assets before validation..."
+    "$repo_root/build-static.sh" --prune-assets > /dev/null
+    git add -u "$repo_root/assets" 2>/dev/null || true
+  fi
+fi
+
 exec python3 "$repo_root/tools/check-staged.py" "$repo_root"
