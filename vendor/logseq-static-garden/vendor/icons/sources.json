@@ -1,0 +1,12 @@
+[
+  {
+    "name": "tabler",
+    "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+    "integrity": "sha512-HflLxyrH1cqC7s7jzQGSjpsTAVIoaf7+/yHjbdM59rJQBMjliibp+LYhDPFxOMcwa1M8DNpOk6ENzQiWn9a1Dg=="
+  },
+  {
+    "name": "emoji-mart",
+    "source": "https://registry.npmjs.org/@emoji-mart/data/-/data-1.2.1.tgz",
+    "integrity": "sha512-no2pQMWiBy6gpBEiqGeU77/bFejDqUTRY7KX+0+iur13op3bqUsXdnwoZs6Xb1zbv0gAj5VvS1PWoUUckSr5Dw=="
+  }
+]

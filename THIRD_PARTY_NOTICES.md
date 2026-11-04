@@ -41,10 +41,16 @@ match, and a separately modified runtime also needs its modified source provided
 | mdurl 0.1.2 | URL parsing dependency | [MIT](licenses/mdurl/LICENSE.txt) |
 | Pygments 2.21.0 | Highlighted code and generated stylesheet rules | [BSD-2-Clause](licenses/pygments/LICENSE.txt), [authors](licenses/pygments/AUTHORS.txt) |
 | KaTeX 0.16.45 | Build-time MathML rendering from the pinned exporter bundle; also present in the raw export | [MIT](licenses/katex/LICENSE.txt) |
+| Nunito, Itim, Sacramento | Self-hosted Dusk theme fonts, Latin subsets | [Nunito OFL](licenses/nunito/OFL.txt), [Itim OFL](licenses/itim/OFL.txt), [Sacramento OFL](licenses/sacramento/OFL.txt) |
 
 The generated site includes the exporter's original browser code, rendered
 content, and Pygments stylesheet output. It does not ship KaTeX, Python packages,
 or the original Logseq runtime. License texts are published under `/licenses/`.
+
+Font URLs, versions and checksums are recorded in `theme/sources.json`. Fonts
+are served from this site rather than contacting Google Fonts in visitors'
+browsers. Icon data and Mermaid notices are included with the pinned exporter's
+own notices.
 
 ## Components retained in the raw export
 

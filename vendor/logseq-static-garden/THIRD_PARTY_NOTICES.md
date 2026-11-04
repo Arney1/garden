@@ -14,6 +14,8 @@ or redistribute their original exports must keep those exports' upstream notices
 | Pygments 2.21.0 | Highlighted code and generated stylesheet rules | [BSD-2-Clause](licenses/pygments/LICENSE.txt), [authors](licenses/pygments/AUTHORS.txt) |
 | KaTeX 0.16.45 | Build-time MathML rendering | [MIT](licenses/katex/LICENSE.txt) |
 | Mermaid 10.9.3 | Client-side diagram rendering on pages that use diagrams | [MIT](licenses/mermaid/LICENSE.txt) |
+| Tabler Icons 3.50.0 | Page icon SVGs selected at build time | [MIT](licenses/tabler/LICENSE.txt) |
+| Emoji Mart data 1.2.1 | Emoji IDs and skin variants, rendered as Unicode | [MIT](licenses/emoji-mart/LICENSE.txt) |
 
 The generated site includes the exporter's original browser code, rendered
 content, and Pygments stylesheet output. It does not ship KaTeX, Python packages,
@@ -44,3 +46,11 @@ Mermaid runs with `securityLevel: 'strict'` and the site's `script-src 'self'`
 policy still applies.
 
 `licenses/sources.json` records the provenance and checksums of retained notices.
+
+## Page icons
+
+`vendor/icons/` contains compressed build-time registries, not executable code.
+`static-garden/vendor-icons.py` regenerates them from integrity-pinned npm
+archives and retains their licenses. Archive URLs and integrity hashes are in
+`vendor/icons/sources.json`. Only selected SVGs and Unicode emoji enter the
+website; no icon JavaScript, icon font, or network lookup is needed by visitors.

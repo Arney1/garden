@@ -90,6 +90,7 @@ there. Personal notes and site-specific changes belong here.
 | `index.html`, `assets/`, `static/` | Public Logseq export and its original runtime |
 | `site.json` | My homepage, navigation, description, and canonical URL |
 | `branding/` | My site logo, kept outside the raw export |
+| `theme/` | Dusk palette, self-hosted fonts, and font provenance; personal styling stays here |
 | `vendor/logseq-static-garden/` | Exact exporter snapshot used by builds |
 | `exporter.lock.json` | Exporter commit and file checksums |
 | `tools/`, `.githooks/` | Snapshot updates and staged-build validation |
@@ -98,6 +99,13 @@ there. Personal notes and site-specific changes belong here.
 A build uses the checked-in snapshot. It does not fetch an exporter branch or
 require the separate checkout on your machine. The build and pre-commit hook both
 check the snapshot against the lock file.
+
+The Dusk stylesheet in `theme/style.css` uses Nunito for body text, Itim for
+headings and navigation, and Sacramento for journal titles. Font files are
+self-hosted (Latin subsets, with system fallbacks for other scripts), with
+SIL Open Font License notices under `licenses/`. Edit the `--m-*` palette
+there rather than changing the pinned exporter. `site.json` disables decorative
+UI copy. All Pages has an A–Z rail and full-text search; Escape clears a search.
 
 For renderer changes and deliberate upgrades, see [Updating the exporter](docs/exporter.md).
 The [exporter guide](vendor/logseq-static-garden/static-garden/README.md) describes

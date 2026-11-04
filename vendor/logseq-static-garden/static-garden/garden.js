@@ -68,6 +68,7 @@
   const results = document.getElementById('search-results');
   const status = document.getElementById('search-status');
   const original = results.cloneNode(true);
+  const browseStatus = status.textContent;
   let dataPromise;
   let generation = 0;
   const search = async () => {
@@ -75,7 +76,7 @@
     const query = input.value.trim().toLocaleLowerCase();
     if (!query) {
       results.replaceChildren(...Array.from(original.cloneNode(true).childNodes));
-      status.textContent = 'Browse all pages below. Type to search.';
+      status.textContent = browseStatus;
       return;
     }
     status.textContent = 'Searching…';
@@ -110,6 +111,16 @@
   };
   let timer;
   input.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(search, 120); });
+  input.addEventListener('keydown', event => {
+    if (event.key === 'Escape') {
+      clearTimeout(timer);
+      input.value = '';
+      search();
+    } else if (event.key === 'ArrowDown') {
+      const first = results.querySelector('.search-hit a, .letter-group .page-list a');
+      if (first) { event.preventDefault(); first.focus(); }
+    }
+  });
   const query = new URLSearchParams(location.search).get('q');
   if (query) { input.value = query; search(); }
 })();

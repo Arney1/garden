@@ -1,0 +1,26 @@
+[
+  {
+    "family": "Nunito",
+    "file": "theme/nunito-latin.woff2",
+    "source": "https://fonts.gstatic.com/s/nunito/v32/XRXV3I6Li01BKofINeaB.woff2",
+    "sha256": "ba344451eab25b217a165363b1982048a5e5830a0daf36577973955a04cac793",
+    "license_source": "https://raw.githubusercontent.com/google/fonts/main/ofl/nunito/OFL.txt",
+    "license_sha256": "580df76c95a1ec5ab878ceb25bb3d85c6a076804e9c970c8c6972aea775fdf65"
+  },
+  {
+    "family": "Itim",
+    "file": "theme/itim-latin.woff2",
+    "source": "https://fonts.gstatic.com/s/itim/v16/0nknC9ziJOYe8ANAkA.woff2",
+    "sha256": "733235cab0000b011f318ba1028f1867ddc16e506ec8231f4134e9c0755d5ca6",
+    "license_source": "https://raw.githubusercontent.com/google/fonts/main/ofl/itim/OFL.txt",
+    "license_sha256": "1f00d1f970b4ea469b6936e599b599bb217edaab792e586658ef2e71cf438685"
+  },
+  {
+    "family": "Sacramento",
+    "file": "theme/sacramento-latin.woff2",
+    "source": "https://fonts.gstatic.com/s/sacramento/v17/buEzpo6gcdjy0EiZMBUG4C0f_Q.woff2",
+    "sha256": "2fcd867d2812578d001b0eca921848e24de91d01986f26e038be374ec7c5cfd2",
+    "license_source": "https://raw.githubusercontent.com/google/fonts/main/ofl/sacramento/OFL.txt",
+    "license_sha256": "2e2cb5a98da665f2ab82a9fd01fb18c2337f845761b0c163f690ed65f3b94677"
+  }
+]

@@ -1,0 +1,182 @@
+/* Dusk — publisher-owned styling. The reusable exporter keeps its own defaults.
+   Fonts are self-hosted so the site's strict CSP and offline reading still work. */
+@font-face {
+  font-family: Nunito;
+  src: url("/theme/nunito-latin.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: Itim;
+  src: url("/theme/itim-latin.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: Sacramento;
+  src: url("/theme/sacramento-latin.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --m-bg: #15131f;
+  --m-bg-low: #1b1927;
+  --m-card: #201e2c;
+  --m-card-high: #2a2837;
+  --m-card-highest: #353344;
+  --m-text: #e6e1f0;
+  --m-text-dim: #c8c3d6;
+  --m-outline: #928ea0;
+  --m-line: #444154;
+  --m-primary: #c4c1ff;
+  --m-on-primary: #2b2878;
+  --m-primary-container: #36327a;
+  --m-on-primary-container: #e2dfff;
+  --m-secondary-container: #3f3d56;
+  --m-on-secondary-container: #e4e1f9;
+  --m-tertiary: #ffb1c4;
+  --m-tertiary-container: #6b2a42;
+  --m-on-tertiary-container: #ffd9e1;
+  --m-error: #ffb4ab;
+  --radius-lg: 24px;
+  --radius-md: 14px;
+  --radius-sm: 8px;
+  --font-body: "Nunito", system-ui, sans-serif;
+  --font-hand: "Itim", "Nunito", system-ui, sans-serif;
+  --font-script: "Sacramento", "Itim", cursive;
+  --bg: var(--m-bg);
+  --panel: var(--m-bg-low);
+  --surface: var(--m-card-high);
+  --text: var(--m-text);
+  --muted: var(--m-text-dim);
+  --accent: var(--m-primary);
+  --line: var(--m-line);
+  --graph-home: var(--m-tertiary);
+  --graph-tag: var(--m-primary);
+  --graph-page: var(--m-outline);
+  --graph-edge-active: #c4c1ffa6;
+  --graph-edge-dim: #928ea01a;
+  --graph-edge: #928ea02e;
+  --graph-selected: var(--m-on-primary-container);
+  --graph-background: var(--m-bg);
+  --graph-label: var(--m-text-dim);
+  --graph-label-active: var(--m-text);
+  font-family: var(--font-body);
+  line-height: 1.6;
+}
+
+body { -webkit-font-smoothing: antialiased; }
+::selection { background: color-mix(in srgb, var(--m-primary) 30%, transparent); }
+h1, h2, h3, h4 { color: var(--m-text); }
+h1, .block-body h2, .block-body h3 {
+  font-family: var(--font-hand);
+  font-weight: 400;
+  letter-spacing: .01em;
+}
+.journal h1 { font-family: var(--font-script); font-size: 3.2rem; }
+main { max-width: 890px; }
+.sidebar { border-right: 0; font-family: var(--font-hand); }
+.brand { color: var(--m-text); font-size: 20px; font-weight: 400; }
+.site-nav > summary { color: var(--m-outline); }
+nav a { color: var(--m-text-dim); font-size: 15px; border-radius: var(--radius-md); }
+nav a:hover, nav a[aria-current] {
+  background: var(--m-card-high);
+  color: var(--m-primary);
+}
+.nav-dot { color: var(--m-primary); }
+.nav-label { color: var(--m-outline); }
+.topbar {
+  background: color-mix(in srgb, var(--m-bg) 78%, transparent);
+  backdrop-filter: blur(14px);
+  border-bottom: 0;
+}
+.topbar a, .topbar span, .page-meta { color: var(--m-outline); }
+.intro, .properties, .unavailable { color: var(--m-text-dim); }
+.properties dt { color: var(--m-outline); }
+.outline { border-color: var(--m-line); border-left-width: 2px; }
+.root-outline { border: 0; }
+.bullet, .block > details > summary:before { color: var(--m-outline); }
+.block:target > .block-body, .block:target > details > summary > .block-body {
+  background: color-mix(in srgb, var(--m-primary) 12%, transparent);
+  border-radius: var(--radius-sm);
+}
+.home figure img { border-radius: var(--radius-lg); border-color: var(--m-line); }
+code { background: var(--m-card-high); color: var(--m-tertiary); border-radius: var(--radius-sm); padding: 1px 6px; }
+pre { background: var(--m-card); border-color: var(--m-line); border-radius: var(--radius-md); }
+pre code { color: inherit; }
+blockquote {
+  background: transparent;
+  color: var(--m-text-dim);
+  border-color: var(--m-tertiary);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  padding: 4px 16px;
+}
+mark { background: color-mix(in srgb, var(--m-tertiary) 30%, transparent); color: var(--m-text); }
+.embed { background: var(--m-card); border-color: var(--m-line); border-left-color: var(--m-tertiary); border-radius: var(--radius-md); }
+.attachment { border-radius: var(--radius-md); }
+tr:nth-child(even) { background: var(--m-bg-low); }
+th { background: var(--m-card-high); }
+.search-label { color: var(--m-text-dim); }
+input[type=search] {
+  background: var(--m-card);
+  border-color: var(--m-line);
+  border-radius: var(--radius-lg);
+  color: var(--m-text);
+  caret-color: var(--m-tertiary);
+}
+input[type=search]::placeholder { color: var(--m-outline); }
+.search-hit p { color: var(--m-text-dim); }
+.letter-group h2 { font-family: var(--font-hand); font-weight: 400; }
+.letter-group .page-list a { font-size: 18px; }
+.alphabet { background: var(--m-bg-low); }
+.alphabet a { color: var(--m-primary); }
+.alphabet > span { color: var(--m-outline); }
+.graph-local, footer, footer a { color: var(--m-outline); }
+footer { border-color: var(--m-line); }
+.mobile-nav, .mobile-explore-panel {
+  background: var(--m-card);
+  border-color: var(--m-line);
+  border-radius: var(--radius-lg);
+}
+.mobile-nav > a, .mobile-explore > summary { color: var(--m-text-dim); }
+.mobile-nav > a[aria-current], .mobile-explore[open] > summary {
+  background: var(--m-primary-container);
+  color: var(--m-on-primary-container);
+}
+.mobile-nav > a:hover, .mobile-explore > summary:hover {
+  background: var(--m-card-high);
+  color: var(--m-primary);
+}
+/* Graph CSS loads after the base stylesheet; scoped selectors keep Dusk in charge. */
+.graph-page .graph-shell { background: var(--m-bg); border-color: var(--m-line); border-radius: var(--radius-lg); }
+.graph-page .graph-detail { background: var(--m-card); border-color: var(--m-line); }
+.graph-page .graph-toolbar label, .graph-page .graph-detail p { color: var(--m-text-dim); }
+.graph-page .graph-actions button, .graph-page .graph-open {
+  background: var(--m-primary-container);
+  border-color: var(--m-line);
+  border-radius: var(--radius-md);
+  color: var(--m-on-primary-container);
+}
+.graph-page .graph-actions button:hover { background: var(--m-card-highest); }
+.graph-page .graph-status, .graph-page .graph-help, .graph-page .graph-legend { color: var(--m-outline); }
+.graph-page .graph-neighbors li { border-color: var(--m-line); }
+.graph-page .graph-legend .home-dot { background: var(--m-tertiary); }
+.graph-page .graph-legend .tag-dot { background: var(--m-primary); }
+.graph-page .graph-legend .note-dot { background: var(--m-outline); }
+.graph-page .graph-touch-preview { background: var(--m-card-high); border-color: var(--m-line); }
+.graph-page .graph-touch-preview > a { color: var(--m-primary); }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--m-text) 18%, transparent); border-radius: 10px; }
+@media (max-width: 640px) {
+  .sidebar { border-bottom: 0; }
+  .brand { font-size: 20px; }
+  .letter-group { margin: 24px 0; }
+}
+@media print {
+  :root { --bg: white; --text: black; --accent: #333; --line: #ccc; --m-text: black; --m-text-dim: #333; --m-outline: #555; --m-primary: #333; }
+  .alphabet { display: none; }
+}

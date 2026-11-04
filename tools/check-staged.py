@@ -13,7 +13,7 @@ def git(root, *args):
 
 
 def relevant(name):
-    return name in ('index.html', 'site.json', 'exporter.lock.json', 'build-static.sh', 'LICENSE.md', 'THIRD_PARTY_NOTICES.md') or name.startswith(('assets/', 'branding/', 'vendor/logseq-static-garden/', 'tools/', 'licenses/'))
+    return name in ('index.html', 'site.json', 'exporter.lock.json', 'build-static.sh', 'LICENSE.md', 'THIRD_PARTY_NOTICES.md') or name.startswith(('assets/', 'branding/', 'theme/', 'vendor/logseq-static-garden/', 'tools/', 'licenses/'))
 
 
 def check(root):
