@@ -280,7 +280,9 @@ class Garden:
                       and not n.get('logseq.property/built-in?')
                       and not str(n.get('db/ident', '')).startswith(('logseq.', 'plugin.'))
                       and n.get('logseq.property/publishing-public?') is not False
-                      and not n.get('block/closed-value-property')}
+                      and not n.get('block/closed-value-property')
+                      and not n.get('logseq.property/deleted-at')
+                      and not n.get('logseq.property.recycle/original-page')}
         self.uuids = {n['block/uuid']: i for i, n in entities.items() if 'block/uuid' in n}
         self.names = {}
         for i, n in self.pages.items():
@@ -592,11 +594,30 @@ class Garden:
         flush()
         return ''.join(parts) or f'<ul class="{classes}"></ul>'
 
+    def is_private_block(self, eid):
+        n = self.entities.get(eid, {})
+        if n.get('logseq.property/public?') is False or n.get('logseq.property/private?') is True:
+            return True
+        text = str(n.get('block/title', ''))
+        lines = [line.strip().casefold() for line in text.split('\n')]
+        if 'private:: true' in lines or 'public:: false' in lines:
+            return True
+        return False
+
     def block(self, eid, ancestors=(), *, number=None):
         if eid in ancestors:
             raise ValueError(f'Cycle in block tree: {eid}')
         n = self.entities[eid]
         self.rendered_ids.add(eid)
+        if self.is_private_block(eid):
+            # Consume children so orphan/coverage checks pass without rendering them.
+            def consume(i):
+                self.rendered_ids.add(i)
+                for c in self.children[i]:
+                    consume(c)
+            for c in self.children[eid]:
+                consume(c)
+            return ''
         text = n.get('block/title', '')
         display = n.get('logseq.property.node/display-type')
         diagram = self.mermaid_block(eid, n, display)

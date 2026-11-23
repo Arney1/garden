@@ -93,6 +93,18 @@ class MetadataTests(unittest.TestCase):
         html = g.shell('Home', '', '/', '/s.css', '/s.js', home=True)
         self.assertEqual(html.count('🎓'), 3)  # desktop, mobile Explore, heading
 
+    def test_recycled_pages_and_private_blocks_are_excluded(self):
+        self.nodes[2] = node('Trashed Page', '22222222-2222-4222-8222-000000000002', **{'block/name': 'trashed page', 'logseq.property/deleted-at': 12345})
+        self.nodes[3] = node('Private Block', '33333333-3333-4333-8333-000000000003', **{'block/page': 1, 'block/parent': 1, 'block/order': 'a5', 'logseq.property/public?': False})
+        self.nodes[4] = node('Child of Private', '44444444-4444-4444-8444-000000000004', **{'block/page': 1, 'block/parent': 3, 'block/order': 'a0'})
+        self.nodes[5] = node('Inline Private', '55555555-5555-4555-8555-000000000005', **{'block/page': 1, 'block/parent': 1, 'block/order': 'a6', 'block/title': 'Secret line\nprivate:: true'})
+        g = Garden(self.nodes, self.source, self.config)
+        self.assertNotIn(2, g.pages)
+        content = g.page_content(1)
+        self.assertNotIn('Private Block', content)
+        self.assertNotIn('Child of Private', content)
+        self.assertNotIn('Secret line', content)
+
     def test_directory_groups_accents_numbers_non_latin_and_escapes_titles(self):
         for eid, title in enumerate(['éclair', 'Alpha <script>', '9 lives', '日本語', 'zebra'], 2):
             self.nodes[eid] = node(title, str(eid), **{'block/name': title})
