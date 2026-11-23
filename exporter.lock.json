@@ -1,5 +1,5 @@
 {
-  "commit": "a789b2a200dfa855a1a41143db4fc2efa8a532ad",
+  "commit": "fb6449c099c1ccb122a24a62bd0a096a7f821746",
   "files": {
     ".github/workflows/check.yml": "a66720eaf477f6fa31a5042c636ff786a2cffd93f703ae0cbf326f1f6bbd5bfe",
     ".gitignore": "8d012ec5aa9230655ebcd8921e9e8c1287b670e0ddbfafb0ef7e7a3bc0165d0a",
@@ -34,7 +34,7 @@
     "static-garden/README.md": "3660e30c39a8e694cbf6a1bee41f739ef887c2f05c384984bebd3c13b4b5d044",
     "static-garden/branding/logo.png": "5b76fd38d80cde4f173f1d7be2d9614696ffdfce5386495f1dbbcc17f70d7bc2",
     "static-garden/branding/logo.svg": "b34b2e120c7ff8887ce72ccadc2870c65db99ea20188745e2958bd3ec992f2e5",
-    "static-garden/build.py": "29c6c325cc3ca1a3300f11b04c2df953a6d529fa2d33820ae732b6ce83054a92",
+    "static-garden/build.py": "e5e793b40dd58e52a52e7d434e75e0f1213babe28e287e859bcfa7c6797ad34d",
     "static-garden/garden.css": "8a817236b97f48feaba7af464a4828a368f5f9c3c968d7fc16021f4d2c7211c8",
     "static-garden/garden.js": "eb1e7a38740b2e9f6ad1cde511c6092d7e8c7e801c2287e4f8aaa70ebd205a7d",
     "static-garden/graph-layout.cjs": "e7a03cb7dff5acb2f96c93cda9e5328829be2166b3b92e915dc9b4b349659281",
@@ -45,7 +45,7 @@
     "static-garden/site.json": "a7d5705f92bce72595389b2f7c0ef97120c7e874a2106b9546983b4b1919a416",
     "static-garden/test_build.py": "e3d7cc326185d55a919e4d96b5e6c763f7d9c11c37912e1231174dbce9421fbf",
     "static-garden/test_mermaid.py": "e42e13400c2f3bbe328b27ff4687ac7e26692e86c0dcf47f115e679d06405da1",
-    "static-garden/test_metadata.py": "51ed4eb7bb74e8fc2805f3233d353679788511ff123cced0712420863a85fe5a",
+    "static-garden/test_metadata.py": "5b845f38f9646a3d3d634a0d23f9cb5113675b7cc3c441786a6b3ff85e7dc3d1",
     "static-garden/test_security.py": "3b8cb8d8125a8df90d34b83b55fdf1324be9d132d837c48d473c82a55800c27d",
     "static-garden/test_standalone.py": "7897d47d9b1e40a33f07d51efb753dbd22a60dab8a708d3d317e9e80c6a8f954",
     "static-garden/test_video.py": "632f6c6f7a8e12bc20e5bcb7a116e34975324e44aff4c16df964ccebc62b7a22",
